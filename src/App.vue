@@ -14,7 +14,23 @@
       </div>
     </header>
 
+  <div class="section-header">
     <h2 class="section-title">Catalogue</h2>
+
+    <div class="cart-summary-wrap">
+      <button @click="displayCart = !displayCart" class="cart-summary" type="button">
+        <span class="cart-summary-icon">🛒</span>
+        <span class="cart-summary-count">{{currency(cartTotal)}}</span>
+      </button>
+
+      <div v-if="displayCart" class="cart-list">
+        <div v-for="item in cart" :key="item.id" class="cart-list-item">
+          <span class="cart-item-name">{{ item.name }}</span>
+          <span class="cart-item-price">{{ currency(item.price) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
     <div class="filter-bar">
       <div class="filter-left">
@@ -42,7 +58,13 @@
 
     <div class="grid">
       <article v-for="item in filteredProducts" :key="item.id" class="product-card">
-        <img class="product-image" :src="item.img" :title="item.name" :alt="item.name">
+        <div class="image-wrap">
+          <img class="product-image" :src="item.img" :title="item.name" :alt="item.name">
+
+          <button @click="addToCart(item)" class="image-cart-button" type="button" title="Add to cart">
+            🛒
+          </button>
+        </div>
 
         <div class="product-body">
           <h3 class="product-title">
@@ -76,10 +98,15 @@ export default {
       max: 200,
       cheap: 25, 
       sale: 20, 
+      cart: [], 
+      displayCart: false, 
       items: products
     }
   },
   methods: {
+    addToCart(product) {
+      this.cart.push(product);
+    },
     currency(value) {
       return `$${Number.parseFloat(value).toFixed(2)}`
     }
@@ -87,6 +114,9 @@ export default {
   computed: {
     filteredProducts() {
       return this.items.filter( item => (item.price < this.max))
+    }, 
+    cartTotal() {
+      return this.cart.reduce((inc, item) => Number(item.price) + inc, 0);
     }
   }
 }
