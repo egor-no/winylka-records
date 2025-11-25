@@ -18,37 +18,55 @@
     <h2 class="section-title">Catalogue</h2>
 
     <div class="cart-summary-wrap">
-      <button @click="displayCart = !displayCart" class="cart-summary" type="button">
+      <button
+        @click="displayCart = !displayCart"
+        class="cart-summary"
+        :class="{ 'cart-open': displayCart }"
+        type="button"
+      >
         <span class="cart-summary-icon">🛒</span>
-        <span class="cart-summary-count">{{currency(cartTotal)}}</span>
+        <span class="cart-summary-count" :class="{ 'cart-count-open': displayCart }">
+          {{ currency(cartTotal) }}
+        </span>
       </button>
 
-      <div v-if="displayCart" class="cart-list">
-        <template v-if="cartObjects.length">
-          <div
-            v-for="line in cartObjects"
-            :key="line.item.id"
-            class="cart-list-item"
-          >
-            <span
-              @click="deleteFromCart(line.item)"
-              type="button"
-              class="cart-delete-btn"
-              title="Remove from cart"
-            >
-              🗑
-            </span>
+        <transition name="cart-dropdown">
+          <div v-if="displayCart" class="cart-list">
+            <template v-if="cartObjects.length">
+              <transition-group
+                name="cart-item"
+                tag="div"
+                class="cart-list-inner"
+                appear
+               >
+                <div
+                  v-for="line in cartObjects"
+                  :key="line.item.id"
+                  class="cart-list-item"
+                >
+                  <span
+                    @click="deleteFromCart(line.item)"
+                    type="button"
+                    class="cart-delete-btn"
+                    title="Remove from cart"
+                  >
+                    🗑
+                  </span>
 
-            <span class="cart-item-name">{{ line.item.name }}</span>
-            <span class="cart-item-qty">×{{ line.amount }}</span>
-            <span class="cart-item-price">{{ currency(line.item.price * line.amount) }}</span>
+                  <span class="cart-item-name">{{ line.item.name }}</span>
+                  <span class="cart-item-qty">×{{ line.amount }}</span>
+                  <span class="cart-item-price">{{ currency(line.item.price * line.amount) }}</span>
+                </div>
+              </transition-group>
+            </template>
+
+            <transition name="empty-fade" appear>
+              <div v-if="!cartObjects.length" class="cart-empty">
+                <p class="cart-note">Корзина пуста</p>
+              </div>
+            </transition>
           </div>
-        </template>
-
-        <div v-else class="cart-empty">
-          <p class="cart-note">Корзина пуста</p>
-        </div>
-      </div>
+        </transition> 
     </div>
   </div>
 

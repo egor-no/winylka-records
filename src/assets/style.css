@@ -95,6 +95,15 @@ body {
   cursor: pointer;
 }
 
+.cart-summary {
+  transition: background .2s ease, border-color .2s ease;
+}
+
+.cart-summary.cart-open {
+  background: #21523a;     
+  border-color: #21523a;
+}
+
 .cart-summary:hover {
   background: #1d402f;
 }
@@ -112,6 +121,88 @@ body {
   color: #fff;
   text-align: center;
   font-size: 11px;
+}
+
+.cart-summary-count {
+  transition: background .2s ease, color .2s ease;
+}
+
+.cart-summary-count.cart-count-open {
+  background: #f1d098;      
+  color: #142f22;          
+}
+
+.cart-dropdown-enter-from,
+.cart-dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.cart-dropdown-enter-to,
+.cart-dropdown-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cart-dropdown-enter-active,
+.cart-dropdown-leave-active {
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+}
+
+.cart-item-appear-from {
+  opacity: 0;
+}
+
+.cart-item-appear-to {
+  opacity: 1;
+}
+
+.cart-item-appear-active {
+  transition: opacity 0.25s ease-out;
+}
+
+.cart-item-enter-from {
+  opacity: 0;
+}
+
+.cart-item-enter-to {
+  opacity: 1;
+}
+
+.cart-item-enter-active {
+  transition: opacity 0.25s ease;
+}
+
+.cart-item-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cart-item-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.cart-item-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.cart-item-move {
+  transition: transform 0.25s ease;
+}
+
+.empty-fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.empty-fade-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.empty-fade-enter-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .grid {
@@ -321,7 +412,7 @@ body {
 
 .image-cart-button.added {
   background: #b1b1b1; 
-  color: #ffffff;                  
+  color: #383838;                  
   border: 1px solid #0e2319;
   border-radius: 4px;
   cursor: pointer;
@@ -358,8 +449,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-
-  animation: dropdown 0.18s ease-out;
 }
 
 .cart-list-item {
