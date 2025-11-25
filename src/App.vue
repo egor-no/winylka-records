@@ -24,9 +24,29 @@
       </button>
 
       <div v-if="displayCart" class="cart-list">
-        <div v-for="item in cart" :key="item.id" class="cart-list-item">
-          <span class="cart-item-name">{{ item.name }}</span>
-          <span class="cart-item-price">{{ currency(item.price) }}</span>
+        <template v-if="cartObjects.length">
+          <div
+            v-for="line in cartObjects"
+            :key="line.item.id"
+            class="cart-list-item"
+          >
+            <span
+              @click="deleteFromCart(line.item)"
+              type="button"
+              class="cart-delete-btn"
+              title="Remove from cart"
+            >
+              🗑
+            </span>
+
+            <span class="cart-item-name">{{ line.item.name }}</span>
+            <span class="cart-item-qty">×{{ line.amount }}</span>
+            <span class="cart-item-price">{{ currency(line.item.price * line.amount) }}</span>
+          </div>
+        </template>
+
+        <div v-else class="cart-empty">
+          <p class="cart-note">Корзина пуста</p>
         </div>
       </div>
     </div>
@@ -61,7 +81,7 @@
         <div class="image-wrap">
           <img class="product-image" :src="item.img" :title="item.name" :alt="item.name">
 
-          <button @click="addToCart(item)" class="image-cart-button" type="button" title="Add to cart">
+          <button @click="addToCart(item)" class="image-cart-button" :class="isInCart(item) ? 'added' : 'to-add'" type="button" title="Add to cart">
             🛒
           </button>
         </div>
@@ -90,8 +110,6 @@
 </template>
 
 <script>
-import { products } from './data/products.js'
-
 export default {
   data() {
     return {
@@ -100,15 +118,31 @@ export default {
       sale: 20, 
       cart: [], 
       displayCart: false, 
-      items: products
+      items: []
     }
   },
+  created() {
+    fetch("/data/products.json")
+      .then(response => response.json())
+      .then(data => {
+        this.items = data;
+      })
+  },
   methods: {
+    currency(value) {
+      return `$${Number.parseFloat(value).toFixed(2)}`
+    },
     addToCart(product) {
       this.cart.push(product);
     },
-    currency(value) {
-      return `$${Number.parseFloat(value).toFixed(2)}`
+    deleteFromCart(product) {
+      const index = this.cart.findIndex(item => item.id === product.id);
+      if (index !== -1) {
+        this.cart.splice(index, 1); 
+      }
+    },
+    isInCart(product) {
+      return this.cart.some(item => item.id === product.id);
     }
   },
   computed: {
@@ -117,6 +151,22 @@ export default {
     }, 
     cartTotal() {
       return this.cart.reduce((inc, item) => Number(item.price) + inc, 0);
+    },
+    cartObjects() {
+      const map = new Map();
+
+      this.cart.forEach(product => {
+        if (!map.has(product.id)) {
+          map.set(product.id, {
+            item: product,
+            amount: 1
+          });
+        } else {
+          map.get(product.id).amount++;
+        }
+      });
+
+      return Array.from(map.values());
     }
   }
 }
