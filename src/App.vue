@@ -1,74 +1,18 @@
 <template>
   <div class="page">
-    <header class="header">
-      <div class="logo-wrap">
-        <img
-          class="logo-img"
-          src="/src/assets/logo.jpg"
-          alt="Winylka logo"
-        >
-        <div class="header-text">
-          <h1 class="site-title">Winylka Records</h1>
-          <p class="site-subtitle">Selected vinyl records</p>
-        </div>
-      </div>
-    </header>
+    <Header />
 
-  <div class="section-header">
-    <h2 class="section-title">Catalogue</h2>
+    <div class="section-header">
+      <h2 class="section-title">Catalogue</h2>
 
-    <div class="cart-summary-wrap">
-      <button
-        @click="displayCart = !displayCart"
-        class="cart-summary"
-        :class="{ 'cart-open': displayCart }"
-        type="button"
-      >
-        <span class="cart-summary-icon">🛒</span>
-        <span class="cart-summary-count" :class="{ 'cart-count-open': displayCart }">
-          {{ currency(cartTotal) }}
-        </span>
-      </button>
-
-        <transition name="cart-dropdown">
-          <div v-if="displayCart" class="cart-list">
-            <template v-if="cartObjects.length">
-              <transition-group
-                name="cart-item"
-                tag="div"
-                class="cart-list-inner"
-                appear
-               >
-                <div
-                  v-for="line in cartObjects"
-                  :key="line.item.id"
-                  class="cart-list-item"
-                >
-                  <span
-                    @click="deleteFromCart(line.item)"
-                    type="button"
-                    class="cart-delete-btn"
-                    title="Remove from cart"
-                  >
-                    🗑
-                  </span>
-
-                  <span class="cart-item-name">{{ line.item.name }}</span>
-                  <span class="cart-item-qty">×{{ line.amount }}</span>
-                  <span class="cart-item-price">{{ currency(line.item.price * line.amount) }}</span>
-                </div>
-              </transition-group>
-            </template>
-
-            <transition name="empty-fade" appear>
-              <div v-if="!cartObjects.length" class="cart-empty">
-                <p class="cart-note">Корзина пуста</p>
-              </div>
-            </transition>
-          </div>
-        </transition> 
+      <Cart 
+        :cart-objects="cartObjects"
+        :display-cart="displayCart"
+        :cart-total="cartTotal"
+        @delete="deleteFromCart"
+        @toggle="displayCart = !displayCart"
+      />
     </div>
-  </div>
 
     <div class="filter-bar">
       <div class="filter-left">
@@ -105,49 +49,40 @@
     </div>
 
     <div class="grid">
-      <article v-for="item in filteredProducts" :key="item.id" class="product-card">
-        <div class="image-wrap">
-          <img class="product-image" :src="item.img" :title="item.name" :alt="item.name">
-
-          <button @click="addToCart(item)" class="image-cart-button" :class="isInCart(item) ? 'added' : 'to-add'" type="button" title="Add to cart">
-            🛒
-          </button>
-        </div>
-
-        <div class="product-body">
-          <h3 class="product-title">
-            {{ item.artist }} – {{ item.name }}
-          </h3>
-
-          <p class="product-note">{{ item.note }}</p>
-        </div>
-
-        <div class="product-bottom">
-          <div class="product-price">{{ currency(item.price) }}</div>
-
-          <div class="product-tags">
-            <span v-if="item.price < sale" class="tag tag-sale">SALE!</span>
-            <span v-else-if="item.price < cheap" class="tag tag-good">GOOD OFFER!</span>
-
-            <span class="tag tag-format">{{ item.format }}</span>
-          </div>
-        </div>
-      </article>
+      <ProductCard
+        v-for="item in filteredProducts"
+        :key="item.id"
+        :item="item"
+        :cheap="cheap"
+        :sale="sale"
+        :is-in-cart="isInCart"
+        @add="addToCart"
+      />
     </div>
   </div>
 </template>
 
 <script>
+import Header from './components/HeaderBar.vue'
+import ProductCard from './components/ProductCard.vue'
+import Cart from './components/Cart.vue'
+
+import { formatCurrency } from './utils/formatters'
 export default {
+  components: {
+    Header,
+    ProductCard,
+    Cart
+  },
   data() {
     return {
       max: 200,
-      cheap: 25, 
-      sale: 20, 
-      cart: [], 
-      displayCart: false, 
-      items: [], 
-      search: '' 
+      cheap: 25,
+      sale: 20,
+      cart: [],
+      displayCart: false,
+      items: [],
+      search: ''
     }
   },
   created() {
@@ -159,7 +94,7 @@ export default {
   },
   methods: {
     currency(value) {
-      return `$${Number.parseFloat(value).toFixed(2)}`
+      return formatCurrency(value);
     },
     addToCart(product) {
       this.cart.push(product);
@@ -175,7 +110,7 @@ export default {
     }
   },
   computed: {
-      filteredProducts() {
+    filteredProducts() {
       const q = this.search.trim().toLowerCase();
 
       return this.items.filter(item => {
