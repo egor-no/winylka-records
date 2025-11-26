@@ -293,7 +293,31 @@ body {
   background: #f6e4bf;
   border: 1px solid #cfa66f;
   border-radius: 6px;
+  flex-wrap: wrap; 
 }
+
+.filter-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.search-input {
+  margin-left: 6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid #cfa66f;
+  background: #fff8e7;
+  font-size: 12px;
+  min-width: 140px;
+}
+
 #max-price {
   -webkit-appearance: none;
   appearance: none;

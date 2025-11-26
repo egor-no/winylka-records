@@ -88,6 +88,16 @@
       </div>
 
       <div class="filter-right">
+        <label class="search-label">
+          Search:
+          <input
+            v-model="search"
+            type="text"
+            class="search-input"
+            placeholder="Artist or album"
+          >
+        </label>
+
         <span class="result-badge">
           {{ filteredProducts.length }} records
         </span>
@@ -136,7 +146,8 @@ export default {
       sale: 20, 
       cart: [], 
       displayCart: false, 
-      items: []
+      items: [], 
+      search: '' 
     }
   },
   created() {
@@ -164,9 +175,22 @@ export default {
     }
   },
   computed: {
-    filteredProducts() {
-      return this.items.filter( item => (item.price < this.max))
-    }, 
+      filteredProducts() {
+      const q = this.search.trim().toLowerCase();
+
+      return this.items.filter(item => {
+        const matchesPrice = item.price < this.max;
+
+        if (!q) {
+          return matchesPrice;
+        }
+
+        const haystack = `${item.artist} ${item.name}`.toLowerCase();
+        const matchesSearch = haystack.includes(q);
+
+        return matchesPrice && matchesSearch;
+      });
+    },
     cartTotal() {
       return this.cart.reduce((inc, item) => Number(item.price) + inc, 0);
     },
