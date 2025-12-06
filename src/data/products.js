@@ -207,7 +207,7 @@ export const products = [
     format: "vinyl",
     note: "standard black vinyl",
     img: "/src/assets/img/The_Killers_-_Battle_Born.png",
-    price: 23  // GOOD OFFER
+    price: 23  
   },
   {
     id: 22,
@@ -217,6 +217,6 @@ export const products = [
     format: "vinyl",
     note: "standard black vinyl",
     img: "/src/assets/img/Torches_foster_the_people.jpg",
-    price: 19  // SALE!
+    price: 19  
   }
 ];

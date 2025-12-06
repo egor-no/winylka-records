@@ -26,8 +26,9 @@
           >
             <CartItem
               v-for="line in cartObjects"
+              :key="line.item.id"
               :cartItem="line"
-              @delete="$emit('delete', line.item)"
+              @delete="$emit('delete', $event)"
             />
           </transition-group>
         </template>
