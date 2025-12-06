@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-// import Checkout from '../views/Checkout.vue'
+import Checkout from '../views/CheckoutPage.vue'
 import Catalogue from '../views/CataloguePage.vue'
 import AboutPage from '../views/AboutPage.vue'
 
@@ -18,11 +18,11 @@ const routes = [
     name: 'about',
     component: AboutPage,
   },
-//     {
-//     path: '/checkout',
-//     name: 'checkout',
-//     component: Checkout,
-//   },
+    {
+    path: '/checkout',
+    name: 'checkout',
+    component: Checkout,
+  },
 ]
 
 const router = createRouter({

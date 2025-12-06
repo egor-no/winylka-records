@@ -71,12 +71,22 @@ export default {
     ProductCard,
     Cart
   },
+  props: {
+    cartObjects: {
+      type: Array,
+      required: true
+    },
+    cartTotal: {
+      type: Number,
+      required: true
+    }
+  },
+  emits: ['add-to-cart', 'delete-from-cart', 'update-cart'],
   data() {
     return {
       max: 200,
       cheap: 25,
       sale: 20,
-      cart: [],
       displayCart: false,
       items: [],
       search: ''
@@ -93,17 +103,14 @@ export default {
     currency(value) {
       return formatCurrency(value);
     },
+    isInCart(product) {
+      this.$emit('is-in-cart', product);
+    },
     addToCart(product) {
-      this.cart.push(product);
+      this.$emit('add-to-cart', product);
     },
     deleteFromCart(product) {
-      const index = this.cart.findIndex(item => item.id === product.id);
-      if (index !== -1) {
-        this.cart.splice(index, 1); 
-      }
-    },
-    isInCart(product) {
-      return this.cart.some(item => item.id === product.id);
+      this.$emit('delete-from-cart', product);
     }
   },
   computed: {
@@ -122,25 +129,6 @@ export default {
 
         return matchesPrice && matchesSearch;
       });
-    },
-    cartTotal() {
-      return this.cart.reduce((inc, item) => Number(item.price) + inc, 0);
-    },
-    cartObjects() {
-      const map = new Map();
-
-      this.cart.forEach(product => {
-        if (!map.has(product.id)) {
-          map.set(product.id, {
-            item: product,
-            amount: 1
-          });
-        } else {
-          map.get(product.id).amount++;
-        }
-      });
-
-      return Array.from(map.values());
     }
   }
 }

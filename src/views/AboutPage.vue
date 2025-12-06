@@ -9,6 +9,15 @@
     </p>
 
     <p class="about-text">
+      Winylka Records признан лучшим воображаемым музыкальным магазином 
+      по версии воображаемых музыкальных наград в 2026-м году. 
+    </p>
+
+    <p class="about-img">
+      <img class="award-img" src="/src/assets/best-award.png" />
+    </p>
+
+    <p class="about-text">
       Магазин создан как учебный и творческий проект: он помогает отработать
       работу с Vue, компонентами, фильтрами и корзиной, но при этом выглядит
       как настоящий минималистичный магазин винила.
@@ -40,5 +49,16 @@ export default {
   font-size: 14px;
   line-height: 1.6;
   color: #444;
+}
+
+.about-img {
+  margin-top: 12px;
+  align: center;
+}
+
+.award-img {
+  height: 80x;
+  width: auto;
+  border-radius: 4px;
 }
 </style>

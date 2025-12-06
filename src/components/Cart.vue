@@ -31,6 +31,15 @@
               @delete="$emit('delete', $event)"
             />
           </transition-group>
+           <div class="cart-footer" v-if="cartObjects.length">
+            <RouterLink
+              to="/checkout"
+              class="cart-checkout-link"
+              @click="$emit('toggle')"
+            >
+              Оформить заказ
+            </RouterLink>
+          </div>
         </template>
 
         <transition name="empty-fade" appear>

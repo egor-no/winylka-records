@@ -571,6 +571,31 @@ body {
   transform: none;
 }
 
+.cart-footer {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #d6b88a;
+  text-align: left;  /* чтобы выглядело как обычный текст */
+}
+
+.cart-checkout-link {
+  font-size: 12px;
+  color: #142f22;         /* тёмно-зелёный из темы */
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.cart-checkout-link:hover {
+  color: #1d402f;        
+}
+
+.cart-checkout-link:active {
+  color: #21523a;         
+}
+
 @keyframes dropdown {
   from {
     opacity: 0;
