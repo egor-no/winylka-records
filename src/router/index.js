@@ -5,6 +5,7 @@ import Checkout from '../views/CheckoutPage.vue'
 import AboutPage from '../views/AboutPage.vue'
 import Product from '../views/ProductPage.vue'
 import NotFound from '../views/NotFoundPage.vue'
+import CheckoutSuccess from '../views/CheckoutSuccessPage.vue'
 
 const routes = [
   {
@@ -29,6 +30,11 @@ const routes = [
         path: 'checkout',
         name: 'checkout',
         component: Checkout
+      },
+      {
+        path: 'checkout/success',              
+        name: 'checkout-success',
+        component: CheckoutSuccess
       }
     ]
   },

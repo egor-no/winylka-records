@@ -8,6 +8,7 @@
       @add-to-cart="addToCart"
       @delete-from-cart="deleteFromCart"
       @update-cart="updateCart"
+      @place-order="handlePlaceOrder"
     />
   </RouterView>
 </template>
@@ -60,6 +61,11 @@ export default {
     },
     isInCart(product) {
       return this.cart.some(item => item.id === product.id)
+    },
+    handlePlaceOrder(order) {            
+      console.log('Order placed:', order)
+      this.cart = []
+      this.$router.push({ name: 'checkout-success' })
     }
   }
 }

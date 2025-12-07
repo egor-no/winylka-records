@@ -4,181 +4,51 @@
       <h2 class="section-title">Checkout</h2>
     </div>
 
-    <div v-if="!cartObjects.length" class="checkout-empty">
-      <p class="cart-note">
-        Your cart is empty. Go back to the catalogue to add some records.
-      </p>
-      <RouterLink to="/catalogue" class="checkout-link">
-        Back to catalogue
-      </RouterLink>
-    </div>
-
-    <div v-else class="checkout-layout">
-      <form class="checkout-form" @submit.prevent="submitOrder">
-        <fieldset class="checkout-block">
-          <legend class="checkout-block-title">Contact details</legend>
-
-          <label class="checkout-field">
-            <span class="checkout-label">Full name *</span>
-            <input
-              v-model.trim="fullName"
-              type="text"
-              class="checkout-input"
-              required
-            >
-          </label>
-
-          <label class="checkout-field">
-            <span class="checkout-label">Email *</span>
-            <input
-              v-model.trim="email"
-              type="email"
-              class="checkout-input"
-              required
-            >
-          </label>
-
-          <label class="checkout-field">
-            <span class="checkout-label">Phone</span>
-            <input
-              v-model.trim="phone"
-              type="tel"
-              class="checkout-input"
-              placeholder="+7 ..."
-            >
-          </label>
-        </fieldset>
-
-        <fieldset class="checkout-block">
-          <legend class="checkout-block-title">Shipping address</legend>
-
-          <label class="checkout-field">
-            <span class="checkout-label">City *</span>
-            <input
-              v-model.trim="city"
-              type="text"
-              class="checkout-input"
-              required
-            >
-          </label>
-
-          <label class="checkout-field">
-            <span class="checkout-label">Address *</span>
-            <input
-              v-model.trim="address"
-              type="text"
-              class="checkout-input"
-              placeholder="Street, house, apartment"
-              required
-            >
-          </label>
-
-          <label class="checkout-field">
-            <span class="checkout-label">Postal code</span>
-            <input
-              v-model.trim="postalCode"
-              type="text"
-              class="checkout-input"
-            >
-          </label>
-        </fieldset>
-
-        <label class="checkout-field">
-          <span class="checkout-label">Comment to order</span>
-          <textarea
-            v-model.trim="comment"
-            rows="3"
-            class="checkout-textarea"
-            placeholder="Any wishes or additional info"
-          />
-        </label>
-
-        <p v-if="formError" class="checkout-error">
-          {{ formError }}
+    <Transition name="empty-fade" mode="out-in">
+      <div
+        v-if="!cartObjects.length"
+        key="empty"
+        class="checkout-empty"
+      >
+        <p class="cart-note">
+          Your cart is empty. Go back to the catalogue to add some records.
         </p>
+        <RouterLink to="/catalogue" class="checkout-link">
+          Back to catalogue
+        </RouterLink>
+      </div>
 
-        <button
-          class="checkout-submit"
-          type="submit"
-          :disabled="submitting"
-        >
-          {{ submitting ? 'Placing order...' : 'Place order' }}
-        </button>
-      </form>
+      <div
+        v-else
+        key="full"
+        class="checkout-layout"
+      >
+        <CheckoutCustomerForm
+          :has-items="!!localLines.length"
+          @submit="handleFormSubmit"
+        />
 
-      <aside class="checkout-summary">
-        <h3 class="checkout-summary-title">Order summary</h3>
-
-        <ul class="checkout-items">
-          <li
-            v-for="line in localLines"
-            :key="line.item.id"
-            class="checkout-item"
-          >
-            <div class="checkout-item-main">
-              <span class="checkout-item-name">
-                {{ line.item.artist }} — {{ line.item.name }}
-              </span>
-              <span class="checkout-item-price">
-                {{ currency(line.item.price * line.amount) }}
-              </span>
-            </div>
-
-            <div class="checkout-item-controls">
-              <button
-                type="button"
-                class="qty-btn"
-                @click="changeAmount(line, line.amount - 1)"
-              >
-                −
-              </button>
-              <input
-                type="number"
-                min="1"
-                class="qty-input"
-                v-model.number="line.amount"
-                @change="changeAmount(line, line.amount)"
-              >
-              <button
-                type="button"
-                class="qty-btn"
-                @click="changeAmount(line, line.amount + 1)"
-              >
-                +
-              </button>
-
-              <button
-                type="button"
-                class="remove-btn"
-                @click="removeLine(line)"
-                title="Remove from cart"
-              >
-                🗑
-              </button>
-            </div>
-          </li>
-        </ul>
-
-        <dl class="checkout-totals">
-          <div class="checkout-totals-row">
-            <dt>Items total</dt>
-            <dd>{{ currency(itemsTotal) }}</dd>
-          </div>
-          <div class="checkout-totals-row checkout-totals-row--grand">
-            <dt>Total</dt>
-            <dd>{{ currency(itemsTotal) }}</dd>
-          </div>
-        </dl>
-      </aside>
-    </div>
+        <CheckoutSummary
+          :lines="localLines"
+          :total="itemsTotal"
+          @change-amount="changeAmount"
+          @remove-line="removeLine"
+        />
+      </div>
+    </Transition>
   </section>
 </template>
 
 <script>
-import { formatCurrency } from '../utils/formatters'
+import CheckoutCustomerForm from '../components/CheckoutCustomerForm.vue'
+import CheckoutSummary from '../components/CheckoutSummary.vue'
 
 export default {
   name: 'CheckoutPage',
+  components: {
+    CheckoutCustomerForm,
+    CheckoutSummary
+  },
   props: {
     cartObjects: {
       type: Array,
@@ -188,16 +58,7 @@ export default {
   emits: ['place-order', 'update-cart'],
   data() {
     return {
-      localLines: [],
-      fullName: '',
-      email: '',
-      phone: '',
-      city: '',
-      address: '',
-      postalCode: '',
-      comment: '',
-      submitting: false,
-      formError: ''
+      localLines: []
     }
   },
   computed: {
@@ -220,15 +81,21 @@ export default {
     }
   },
   methods: {
-    currency(value) {
-      return formatCurrency(value)
-    },
     changeAmount(line, newAmount) {
-      if (newAmount < 1 || Number.isNaN(newAmount)) {
-        newAmount = 1
-      }
-      line.amount = newAmount
-      this.$emit('update-cart', this.localLines)
+       if (newAmount <= 0 || Number.isNaN(newAmount)) {
+          this.removeLine(line)
+          return
+        }
+
+        const target = this.localLines.find(
+          l => l.item.id === line.item.id
+        )
+
+        if (target) {
+          target.amount = newAmount
+        }
+
+        this.$emit('update-cart', this.localLines)
     },
     removeLine(line) {
       this.localLines = this.localLines.filter(
@@ -236,31 +103,13 @@ export default {
       )
       this.$emit('update-cart', this.localLines)
     },
-    submitOrder() {
-      this.formError = ''
-
-      if (!this.fullName || !this.email || !this.city || !this.address) {
-        this.formError = 'Please fill in all required fields.'
-        return
-      }
-
+    handleFormSubmit(formData) {
       if (!this.localLines.length) {
-        this.formError = 'Cart is empty.'
         return
       }
 
       const order = {
-        customer: {
-          fullName: this.fullName,
-          email: this.email,
-          phone: this.phone
-        },
-        shipping: {
-          city: this.city,
-          address: this.address,
-          postalCode: this.postalCode
-        },
-        comment: this.comment,
+        ...formData,
         items: this.localLines,
         totals: {
           itemsTotal: this.itemsTotal
@@ -268,9 +117,7 @@ export default {
         createdAt: new Date().toISOString()
       }
 
-      this.submitting = true
       this.$emit('place-order', order)
-      this.submitting = false
     }
   }
 }
@@ -294,169 +141,17 @@ export default {
   margin-left: 5px;
 }
 
-.checkout-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.empty-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.checkout-block {
-  border: 1px solid #cfa66f;
-  border-radius: 6px;
-  padding: 10px 12px;
-  background: #f6e4bf;
+.empty-fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
 }
 
-.checkout-block-title {
-  padding: 0 4px;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.checkout-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 8px;
-}
-
-.checkout-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.checkout-input,
-.checkout-textarea {
-  border: 1px solid #cfa66f;
-  border-radius: 4px;
-  padding: 5px 8px;
-  font-size: 13px;
-  font-family: inherit;
-  background: #fff8e7;
-}
-
-.checkout-textarea {
-  resize: vertical;
-}
-
-.checkout-error {
-  color: #8b0000;
-  font-size: 12px;
-}
-
-.checkout-submit {
-  margin-top: 6px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid #142f22;
-  background: #142f22;
-  color: #e0c494;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-}
-
-.checkout-submit:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.checkout-summary {
-  border: 1px solid #cfa66f;
-  border-radius: 6px;
-  padding: 10px 12px;
-  background: #f6e4bf;
-  align-self: flex-start;
-}
-
-.checkout-summary-title {
-  margin: 0 0 6px;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.checkout-items {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 10px;
-}
-
-.checkout-item {
-  padding: 6px 0;
-  border-bottom: 1px solid #d6b88a;
-}
-
-.checkout-item:last-child {
-  border-bottom: none;
-}
-
-.checkout-item-main {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.checkout-item-name {
-  font-weight: 500;
-}
-
-.checkout-item-price {
-  color: #cd683a;
-  font-weight: 600;
-}
-
-.checkout-item-controls {
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.qty-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  border: 1px solid #cfa66f;
-  background: #fff8e7;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.qty-input {
-  width: 40px;
-  padding: 2px 4px;
-  border-radius: 4px;
-  border: 1px solid #cfa66f;
-  background: #fff8e7;
-  font-size: 13px;
-  text-align: center;
-}
-
-.remove-btn {
-  margin-left: auto;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
-
-.checkout-totals {
-  margin: 0;
-}
-
-.checkout-totals-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  margin-top: 4px;
-}
-
-.checkout-totals-row--grand {
-  margin-top: 8px;
-  font-weight: 600;
+.empty-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 </style>

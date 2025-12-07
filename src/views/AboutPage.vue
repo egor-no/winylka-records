@@ -57,7 +57,7 @@ export default {
 }
 
 .award-img {
-  height: 80x;
+  height: 80px;
   width: auto;
   border-radius: 4px;
 }
