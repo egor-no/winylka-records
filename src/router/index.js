@@ -3,6 +3,7 @@ import Shop from '../views/Shop.vue'
 import Catalogue from '../views/CataloguePage.vue'
 import Checkout from '../views/CheckoutPage.vue'
 import AboutPage from '../views/AboutPage.vue'
+import Product from '../views/ProductPage.vue'
 
 const routes = [
   {
@@ -17,6 +18,11 @@ const routes = [
         path: 'catalogue',
         name: 'catalogue',
         component: Catalogue
+      },
+      {
+        path: 'product/:id',
+        name: 'product',
+        component: Product
       },
       {
         path: 'checkout',

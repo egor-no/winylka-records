@@ -1,5 +1,5 @@
 <template>
-  <article class="product-card">
+  <article class="product-card" @click="goToProduct">
     <div class="image-wrap">
       <img
         class="product-image"
@@ -9,7 +9,7 @@
       >
 
       <button
-        @click="$emit('add', item)"
+        @click.stop="$emit('add', item)"
         class="image-cart-button"
         :class="isInCart(item) ? 'added' : 'to-add'"
         type="button"
@@ -69,7 +69,10 @@ export default {
   methods: {
     currency(value) {
       return formatCurrency(value);
-    }
+    },
+    goToProduct() {
+      this.$router.push(`/product/${this.item.id}`)
+    } 
   }
 }
 </script>
