@@ -130,6 +130,11 @@ export default {
         const response = await fetch('/data/products.json')
         const data = await response.json()
         const found = data.find(item => item.id === id)
+
+         if (!found) {
+          this.$router.replace({ name: 'not-found' })
+          return
+        }
         this.product = found || null
       } catch (e) {
         console.error(e)
