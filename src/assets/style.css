@@ -303,6 +303,42 @@ body {
   gap: 10px;
 }
 
+.filter-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-preset {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid #cfa66f;
+  background: #f6e4bf;        /* светлый фон, отличается от Max price value */
+  color: #3c2a1a;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.filter-preset.active {
+  background: #e0c494;      
+  border-color: #a8824e;
+  color: #142f22;           
+  font-weight: 600;
+}
+
+.filter-preset:hover {
+  background: #ecd9b7;    
+  border-color: #b8945a;
+}
+
 .search-label {
   font-size: 12px;
   text-transform: uppercase;

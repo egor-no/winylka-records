@@ -14,10 +14,30 @@
 
     <div class="filter-bar">
       <div class="filter-left">
-        <label for="max-price" class="filter-label">
-          Max price:
-          <span class="filter-value">{{ currency(max) }}</span>
-        </label>
+        <div class="filter-label-row">
+          <label for="max-price" class="filter-label">
+            Max price:
+            <span class="filter-value">{{ currency(max) }}</span>
+          </label>
+
+          <button
+            type="button"
+            class="filter-preset"
+            :class="{ active: max <= sale }"
+            @click="setMax(sale)"
+          >
+            Sale
+          </button>
+
+          <button
+            type="button"
+            class="filter-preset"
+            :class="{ active: max > sale && max <= cheap }"
+            @click="setMax(cheap)"
+          >
+            Good offer
+          </button>
+        </div>
 
         <input
           id="max-price"
@@ -65,6 +85,8 @@ import ProductCard from '../components/ProductCard.vue'
 import Cart from '../components/Cart.vue'
 import { formatCurrency } from '../utils/formatters'
 
+const STORAGE_KEY = 'shuffled-products-v2'
+
 export default {
   name: 'Catalogue',
   components: {
@@ -92,11 +114,24 @@ export default {
       search: ''
     }
   },
-  created() {
-    fetch("/data/products.json")
+created() {
+    const saved = sessionStorage.getItem(STORAGE_KEY)
+
+    if (saved) {
+      try {
+        this.items = JSON.parse(saved)
+        return
+      } catch (e) {
+        console.warn('Failed to parse cached products, refetching...', e)
+      }
+    }
+
+    fetch('/data/products.json')
       .then(response => response.json())
       .then(data => {
-        this.items = data;
+        const shuffled = this.shuffleArray(data)
+        this.items = shuffled
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(shuffled))
       })
   },
   methods: {
@@ -111,6 +146,19 @@ export default {
     },
     deleteFromCart(product) {
       this.$emit('delete-from-cart', product);
+    },
+    setMax(value) {
+      this.max = value;
+    },
+    shuffleArray(list) {
+      const arr = list.slice() // чтобы не мутировать исходный массив на всякий случай
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        const tmp = arr[i]
+        arr[i] = arr[j]
+        arr[j] = tmp
+      }
+      return arr
     }
   },
   computed: {

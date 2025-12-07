@@ -42,6 +42,13 @@
           </span>
         </p>
 
+        <p
+          v-if="product.description"
+          class="product-description"
+        >
+          {{ product.description }}
+        </p>
+
         <p class="product-price-line">
           <span class="product-label">Price:</span>
           <span class="product-price-main">
@@ -217,6 +224,14 @@ export default {
   border: 1px solid #cfa66f;
   border-radius: 6px;
   padding: 10px 12px;
+}
+
+.product-description {
+  margin: 10px 0 18px;       
+  max-width: 75%;            
+  font-size: 13px;
+  line-height: 1.55;         
+  color: #3c2a1a;
 }
 
 .product-label {
