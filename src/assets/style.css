@@ -578,9 +578,9 @@ body {
   text-align: left;  /* чтобы выглядело как обычный текст */
 }
 
-.cart-checkout-link {
+.checkout-link {
   font-size: 12px;
-  color: #142f22;         /* тёмно-зелёный из темы */
+  color: #142f22;        
   text-decoration: underline;
   cursor: pointer;
   padding: 0;
@@ -588,11 +588,11 @@ body {
   border: none;
 }
 
-.cart-checkout-link:hover {
+.checkout-link:hover {
   color: #1d402f;        
 }
 
-.cart-checkout-link:active {
+.checkout-link:active {
   color: #21523a;         
 }
 

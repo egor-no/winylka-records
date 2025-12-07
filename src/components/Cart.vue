@@ -34,10 +34,10 @@
            <div class="cart-footer" v-if="cartObjects.length">
             <RouterLink
               to="/checkout"
-              class="cart-checkout-link"
+              class="checkout-link"
               @click="$emit('toggle')"
             >
-              Оформить заказ
+              Go to checkout
             </RouterLink>
           </div>
         </template>

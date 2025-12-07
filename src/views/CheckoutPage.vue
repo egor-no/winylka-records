@@ -4,19 +4,16 @@
       <h2 class="section-title">Checkout</h2>
     </div>
 
-    <!-- если корзина пуста -->
     <div v-if="!cartObjects.length" class="checkout-empty">
       <p class="cart-note">
         Your cart is empty. Go back to the catalogue to add some records.
       </p>
-      <RouterLink to="/catalogue" class="nav-link">
+      <RouterLink to="/catalogue" class="checkout-link">
         Back to catalogue
       </RouterLink>
     </div>
 
-    <!-- если есть товары -->
     <div v-else class="checkout-layout">
-      <!-- Левая колонка: форма -->
       <form class="checkout-form" @submit.prevent="submitOrder">
         <fieldset class="checkout-block">
           <legend class="checkout-block-title">Contact details</legend>
@@ -109,7 +106,6 @@
         </button>
       </form>
 
-      <!-- Правая колонка: содержимое корзины с изменением количества -->
       <aside class="checkout-summary">
         <h3 class="checkout-summary-title">Order summary</h3>
 
@@ -184,8 +180,6 @@ import { formatCurrency } from '../utils/formatters'
 export default {
   name: 'CheckoutPage',
   props: {
-    // ожидаем тот же формат, что и cartObjects в каталоге:
-    // [{ item: product, amount: number }]
     cartObjects: {
       type: Array,
       default: () => []
@@ -218,7 +212,6 @@ export default {
     cartObjects: {
       immediate: true,
       handler(newVal) {
-        // делаем локальную копию, чтобы не мутировать проп напрямую
         this.localLines = newVal.map(line => ({
           item: line.item,
           amount: line.amount
@@ -235,7 +228,6 @@ export default {
         newAmount = 1
       }
       line.amount = newAmount
-      // можно эмитить наверх, если захочешь синхронизировать корзину
       this.$emit('update-cart', this.localLines)
     },
     removeLine(line) {
@@ -299,6 +291,7 @@ export default {
 
 .checkout-empty {
   margin-top: 12px;
+  margin-left: 5px;
 }
 
 .checkout-form {
