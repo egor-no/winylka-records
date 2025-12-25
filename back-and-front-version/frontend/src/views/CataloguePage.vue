@@ -101,10 +101,6 @@ export default {
     cartTotal: {
       type: Number,
       required: true
-    }, 
-    isInCart: {              
-      type: Function,
-      required: true
     }
   },
   emits: ['add-to-cart', 'delete-from-cart', 'update-cart'],
@@ -141,6 +137,9 @@ created() {
   methods: {
     currency(value) {
       return formatCurrency(value);
+    },
+    isInCart(product) {
+      this.$emit('is-in-cart', product);
     },
     addToCart(product) {
       this.$emit('add-to-cart', product);
