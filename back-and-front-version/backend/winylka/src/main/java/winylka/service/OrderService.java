@@ -1,6 +1,7 @@
 package winylka.service;
 
 import winylka.model.*;
+import winylka.infra.OrderStorage;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -11,9 +12,11 @@ public class OrderService {
 
     private final ProductService products;
     private final AtomicLong seq = new AtomicLong(1000);
+    private final OrderStorage storage;
 
-    public OrderService(ProductService products) {
+    public OrderService(ProductService products, OrderStorage storage) {
         this.products = products;
+        this.storage = storage;
     }
 
     public OrderResponse create(OrderRequest req) {
@@ -35,13 +38,12 @@ public class OrderService {
             total += p.getPrice() * it.getAmount();
         }
 
+        storage.add(req);
+
         OrderResponse resp = new OrderResponse();
         resp.setOrderId(seq.incrementAndGet());
         resp.setItemsTotal(total);
         resp.setCreatedAt(Instant.now());
-
-        // пока без БД: можно просто логировать
-        // System.out.println("NEW ORDER: " + resp.getOrderId() + " total=" + total);
 
         return resp;
     }
