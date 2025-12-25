@@ -16,53 +16,63 @@
 <script>
 import { formatCurrency } from '../utils/formatters'
 import { http } from '../api/http'
+import { cartApi } from '../api/cart'
 
 export default {
   name: 'Shop',
   data() {
     return {
-      cart: []
+      cartState: { lines: [], itemsTotal: 0 }
     }
   },
   computed: {
     cartTotal() {
-      return this.cart.reduce((sum, item) => sum + Number(item.price), 0)
+      return Number(this.cartState?.itemsTotal || 0)
     },
     cartObjects() {
-      const map = new Map()
-      this.cart.forEach(product => {
-        if (!map.has(product.id)) {
-          map.set(product.id, { item: product, amount: 1 })
-        } else {
-          map.get(product.id).amount++
-        }
-      })
-      return Array.from(map.values())
+      return (this.cartState?.lines || []).map(l => ({
+        item: l.item,
+        amount: l.amount
+      }))
     }
+  },
+  async created() {
+    await this.refreshCart()
   },
   methods: {
     currency(value) {
       return formatCurrency(value)
     },
-    addToCart(product) {
-      this.cart.push(product)
+
+    async refreshCart() {
+      const { data } = await cartApi.get()
+      this.cartState = data
     },
-    deleteFromCart(product) {
-      const index = this.cart.findIndex(item => item.id === product.id)
-      if (index !== -1) this.cart.splice(index, 1)
+
+    async addToCart(product) {
+      const { data } = await cartApi.add(product.id, 1)
+      this.cartState = data
     },
-    updateCart(lines) {
-      const next = []
-      lines.forEach(line => {
-        for (let i = 0; i < line.amount; i++) {
-          next.push(line.item)
-        }
-      })
-      this.cart = next
+
+    async deleteFromCart(product) {
+      const { data } = await cartApi.remove(product.id)
+      this.cartState = data
     },
+
+    async updateCart(lines) {
+      // lines приходит в старом формате: [{ item, amount }]
+      const payload = lines.map(l => ({
+        productId: l.item.id,
+        amount: l.amount
+      }))
+      const { data } = await cartApi.replace(payload)
+      this.cartState = data
+    },
+
     isInCart(product) {
-      return this.cart.some(item => item.id === product.id)
+      return this.cartObjects.some(l => l.item.id === product.id && l.amount > 0)
     },
+
     async handlePlaceOrder(order) {
       try {
         const payload = {
@@ -78,7 +88,9 @@ export default {
         const { data } = await http.post('/orders', payload)
         console.log('Order created:', data)
 
-        this.cart = []
+        await cartApi.clear()
+        await this.refreshCart()
+
         this.$router.push({ name: 'checkout-success' })
       } catch (e) {
         console.error(e)
