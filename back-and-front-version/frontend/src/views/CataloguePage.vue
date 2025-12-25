@@ -84,6 +84,7 @@
 import ProductCard from '../components/ProductCard.vue'
 import Cart from '../components/Cart.vue'
 import { formatCurrency } from '../utils/formatters'
+import { http } from '../api/http'
 
 const STORAGE_KEY = 'shuffled-products-v2'
 
@@ -101,6 +102,10 @@ export default {
     cartTotal: {
       type: Number,
       required: true
+    }, 
+    isInCart: {       
+      type: Function,
+      required: true
     }
   },
   emits: ['add-to-cart', 'delete-from-cart', 'update-cart'],
@@ -115,31 +120,30 @@ export default {
     }
   },
 created() {
-    const saved = sessionStorage.getItem(STORAGE_KEY)
+  const saved = sessionStorage.getItem(STORAGE_KEY)
 
-    if (saved) {
-      try {
-        this.items = JSON.parse(saved)
-        return
-      } catch (e) {
-        console.warn('Failed to parse cached products, refetching...', e)
-      }
+  if (saved) {
+    try {
+      this.items = JSON.parse(saved)
+      return
+    } catch (e) {
+      console.warn('Failed to parse cached products, refetching...', e)
     }
+  }
 
-    fetch('/data/products.json')
-      .then(response => response.json())
-      .then(data => {
-        const shuffled = this.shuffleArray(data)
-        this.items = shuffled
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(shuffled))
-      })
+  http.get('/products')
+    .then(({ data }) => {
+      const shuffled = this.shuffleArray(data)
+      this.items = shuffled
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(shuffled))
+    })
+    .catch(err => {
+      console.error(err)
+    })
   },
   methods: {
     currency(value) {
       return formatCurrency(value);
-    },
-    isInCart(product) {
-      this.$emit('is-in-cart', product);
     },
     addToCart(product) {
       this.$emit('add-to-cart', product);

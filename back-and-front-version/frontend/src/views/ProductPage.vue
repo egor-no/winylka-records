@@ -96,6 +96,7 @@
 <script>
 import { formatCurrency } from '../utils/formatters'
 import Cart from '../components/Cart.vue'
+import { http } from '../api/http'
 
 export default {
   name: 'ProductPage',
@@ -134,16 +135,13 @@ export default {
       this.loading = true
       this.error = ''
       try {
-        const response = await fetch('/data/products.json')
-        const data = await response.json()
-        const found = data.find(item => item.id === id)
-
-         if (!found) {
+        const { data } = await http.get(`/products/${id}`)
+        this.product = data
+      } catch (e) {
+        if (e?.response?.status === 404) {
           this.$router.replace({ name: 'not-found' })
           return
         }
-        this.product = found || null
-      } catch (e) {
         console.error(e)
         this.error = 'Failed to load product.'
       } finally {

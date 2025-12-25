@@ -15,6 +15,7 @@
 
 <script>
 import { formatCurrency } from '../utils/formatters'
+import { http } from '../api/http'
 
 export default {
   name: 'Shop',
@@ -62,10 +63,27 @@ export default {
     isInCart(product) {
       return this.cart.some(item => item.id === product.id)
     },
-    handlePlaceOrder(order) {            
-      console.log('Order placed:', order)
-      this.cart = []
-      this.$router.push({ name: 'checkout-success' })
+    async handlePlaceOrder(order) {
+      try {
+        const payload = {
+          customer: order.customer,
+          shipping: order.shipping,
+          comment: order.comment,
+          items: order.items.map(line => ({
+            productId: line.item.id,
+            amount: line.amount
+          }))
+        }
+
+        const { data } = await http.post('/orders', payload)
+        console.log('Order created:', data)
+
+        this.cart = []
+        this.$router.push({ name: 'checkout-success' })
+      } catch (e) {
+        console.error(e)
+        alert('Failed to place order.')
+      }
     }
   }
 }
