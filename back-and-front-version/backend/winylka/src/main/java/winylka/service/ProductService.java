@@ -1,9 +1,10 @@
 package winylka.service;
 
-import winylka.infra.JsonProductRepository;
+import winylka.infra.ProductRepository;
 import winylka.model.Product;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -11,17 +12,15 @@ import java.util.stream.Stream;
 @Service
 public class ProductService {
 
-    private final JsonProductRepository repo;
-    private volatile List<Product> cached; // простейший кэш
+    private final ProductRepository repo;
 
-    public ProductService(JsonProductRepository repo) {
+    public ProductService(ProductRepository repo) {
         this.repo = repo;
-        this.cached = repo.loadAll();
     }
 
     public List<Product> findAll(String q, Integer maxPrice, String format,
                                  String sort, Integer limit, Integer offset) {
-        Stream<Product> s = cached.stream();
+        Stream<Product> s = repo.findAll().stream();
 
         if (q != null && !q.trim().isEmpty()) {
             String needle = q.trim().toLowerCase();
@@ -29,7 +28,8 @@ public class ProductService {
         }
 
         if (maxPrice != null) {
-            s = s.filter(p -> p.getPrice() <= maxPrice);
+            BigDecimal max = BigDecimal.valueOf(maxPrice);
+            s = s.filter(p -> p.getPrice().compareTo(max) <= 0);
         }
 
         if (format != null && !format.isBlank()) {
@@ -42,8 +42,8 @@ public class ProductService {
         // сортировка
         if (sort != null) {
             switch (sort) {
-                case "priceAsc" -> list.sort(Comparator.comparingInt(Product::getPrice));
-                case "priceDesc" -> list.sort(Comparator.comparingInt(Product::getPrice).reversed());
+                case "priceAsc" -> list.sort(Comparator.comparing(Product::getPrice));
+                case "priceDesc" -> list.sort(Comparator.comparing(Product::getPrice).reversed());
                 case "artistAsc" -> list.sort(Comparator.comparing(p -> safe(p.getArtist())));
                 case "random" -> Collections.shuffle(list);
             }
@@ -57,16 +57,11 @@ public class ProductService {
     }
 
     public Product findById(int id) {
-        return cached.stream()
-                .filter(p -> p.getId() == id)
-                .findFirst()
-                .orElse(null);
+        return repo.findById(id).orElse(null);
     }
 
     public Map<Integer, Product> mapByIds(Collection<Integer> ids) {
-        Set<Integer> set = new HashSet<>(ids);
-        return cached.stream()
-                .filter(p -> set.contains(p.getId()))
+        return repo.findAllById(ids).stream()
                 .collect(Collectors.toMap(Product::getId, p -> p));
     }
 

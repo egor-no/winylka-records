@@ -4,6 +4,7 @@ import winylka.model.*;
 import winylka.infra.OrderStorage;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -30,12 +31,13 @@ public class OrderService {
             throw new IllegalArgumentException("Shipping city and address are required");
         }
 
-        int total = 0;
+        BigDecimal total = BigDecimal.ZERO;
         for (OrderItemRequest it : req.getItems()) {
             if (it.getAmount() <= 0) throw new IllegalArgumentException("Invalid amount for productId=" + it.getProductId());
             var p = products.findById(it.getProductId());
             if (p == null) throw new IllegalArgumentException("Unknown productId=" + it.getProductId());
-            total += p.getPrice() * it.getAmount();
+            BigDecimal lineTotal = p.getPrice().multiply(BigDecimal.valueOf(it.getAmount()));
+            total = total.add(lineTotal);
         }
 
         storage.add(req);

@@ -1,16 +1,17 @@
 package winylka.model;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 public class OrderResponse {
     private long orderId;
-    private int itemsTotal;
+    private BigDecimal itemsTotal;
     private Instant createdAt;
 
     public OrderResponse() {
     }
 
-    public OrderResponse(long orderId, int itemsTotal, Instant createdAt) {
+    public OrderResponse(long orderId, BigDecimal itemsTotal, Instant createdAt) {
         this.orderId = orderId;
         this.itemsTotal = itemsTotal;
         this.createdAt = createdAt;
@@ -24,11 +25,11 @@ public class OrderResponse {
         this.orderId = orderId;
     }
 
-    public int getItemsTotal() {
+    public BigDecimal getItemsTotal() {
         return itemsTotal;
     }
 
-    public void setItemsTotal(int itemsTotal) {
+    public void setItemsTotal(BigDecimal itemsTotal) {
         this.itemsTotal = itemsTotal;
     }
 

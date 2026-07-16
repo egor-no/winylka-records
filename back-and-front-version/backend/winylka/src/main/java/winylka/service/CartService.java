@@ -6,6 +6,7 @@ import winylka.model.CartLineRequest;
 import winylka.model.CartResponse;
 import winylka.model.Product;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 @Service
@@ -85,13 +86,18 @@ public class CartService {
     private CartResponse buildResponse(Map<Integer, Integer> map) {
         CartResponse resp = new CartResponse();
 
-        int total = 0;
+        BigDecimal total = BigDecimal.ZERO;
+
         for (Map.Entry<Integer, Integer> e : map.entrySet()) {
             Product p = products.findById(e.getKey());
-            if (p == null) continue; // на всякий случай
+
+            if (p == null) {
+                continue;
+            }
 
             int amount = e.getValue();
-            int lineTotal = p.getPrice() * amount;
+
+            BigDecimal lineTotal = p.getPrice().multiply(BigDecimal.valueOf(amount));
 
             CartResponse.Line line = new CartResponse.Line();
             line.setItem(p);
@@ -99,7 +105,8 @@ public class CartService {
             line.setLineTotal(lineTotal);
 
             resp.getLines().add(line);
-            total += lineTotal;
+
+            total = total.add(lineTotal);
         }
 
         resp.setItemsTotal(total);
