@@ -28,10 +28,13 @@ public class Product {
     @Column(columnDefinition = "text")
     private String description;
 
+    @Column(nullable = false)
+    private Integer stockQuantity;
+
     public Product() {
     }
 
-    public Product(int id, String artist, String name, String catNo, String format, String note, String img, BigDecimal price, String description) {
+    public Product(int id, String artist, String name, String catNo, String format, String note, String img, BigDecimal price, String description, Integer stockQuantity) {
         this.id = id;
         this.artist = artist;
         this.name = name;
@@ -41,6 +44,7 @@ public class Product {
         this.img = img;
         this.price = price;
         this.description = description;
+        this.stockQuantity = stockQuantity;
     }
 
     public int getId() {
@@ -113,5 +117,13 @@ public class Product {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Integer getStockQuantity() {return stockQuantity;}
+
+    public void setStockQuantity(Integer stockQuantity) {this.stockQuantity = stockQuantity;}
+
+    public boolean isInStock() {
+        return stockQuantity != null && stockQuantity > 0;
     }
 }
