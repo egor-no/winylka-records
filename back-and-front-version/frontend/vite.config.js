@@ -9,7 +9,7 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true
       },
-      '/img': {
+      '/files': {
         target: 'http://localhost:8080',
         changeOrigin: true
       }
