@@ -77,6 +77,41 @@ public class FileStorageService {
         return "/files/products/" + generatedFileName;
     }
 
+    public void deleteProductImage(String imagePath) {
+        if (imagePath == null || imagePath.isBlank()) {
+            return;
+        }
+
+        String prefix = "/files/products/";
+
+        if (!imagePath.startsWith(prefix)) {
+            return;
+        }
+
+        String fileName = imagePath.substring(prefix.length());
+
+        if (fileName.isBlank()) {
+            return;
+        }
+
+        Path target = productsDirectory.resolve(fileName).normalize();
+
+        if (!target.startsWith(productsDirectory)) {
+            throw new IllegalArgumentException(
+                    "Некорректный путь к изображению"
+            );
+        }
+
+        try {
+            Files.deleteIfExists(target);
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "Не удалось удалить изображение: " + imagePath,
+                    e
+            );
+        }
+    }
+
     private String getExtension(String fileName) {
         if (fileName == null || !fileName.contains(".")) {
             throw new IllegalArgumentException("У файла отсутствует расширение");

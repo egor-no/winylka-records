@@ -91,4 +91,56 @@ class FileStorageServiceTest {
                 exception.getMessage()
         );
     }
+
+    @Test
+    void shouldDeleteProductImage() throws Exception {
+        FileStorageService storageService =
+                new FileStorageService(tempDirectory.toString());
+
+        MockMultipartFile image = new MockMultipartFile(
+                "image",
+                "cover.png",
+                "image/png",
+                "test image content".getBytes()
+        );
+
+        String imagePath = storageService.saveProductImage(image);
+
+        String fileName = imagePath.substring(
+                "/files/products/".length()
+        );
+
+        Path savedFile = tempDirectory.resolve(fileName);
+
+        assertTrue(Files.exists(savedFile));
+
+        storageService.deleteProductImage(imagePath);
+
+        assertFalse(Files.exists(savedFile));
+    }
+
+    @Test
+    void shouldNotFailWhenImageDoesNotExist() {
+        FileStorageService storageService =
+                new FileStorageService(tempDirectory.toString());
+
+        assertDoesNotThrow(() ->
+                storageService.deleteProductImage(
+                        "/files/products/missing-image.png"
+                )
+        );
+    }
+
+    @Test
+    void shouldIgnoreImageOutsideProductDirectory() throws Exception {
+        FileStorageService storageService =
+                new FileStorageService(tempDirectory.toString());
+
+        Path file = tempDirectory.resolve("important.png");
+        Files.writeString(file, "important");
+
+        storageService.deleteProductImage("/img/important.png");
+
+        assertTrue(Files.exists(file));
+    }
 }

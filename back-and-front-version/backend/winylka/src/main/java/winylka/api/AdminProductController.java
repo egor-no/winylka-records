@@ -56,4 +56,13 @@ public class AdminProductController {
 
         return ResponseEntity.ok(updated);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @PathVariable int id
+    ) {
+        productService.delete(id);
+
+        return ResponseEntity.noContent().build();
+    }
 }

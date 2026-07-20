@@ -2,6 +2,8 @@ package winylka.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import winylka.dto.ProductForm;
 import winylka.infra.ProductRepository;
 import winylka.model.Product;
@@ -136,16 +138,61 @@ public class ProductService {
                 );
 
         validate(form);
+
+        String oldImagePath = product.getImg();
+
         copyFormToProduct(form, product);
 
-        if (form.getImage() != null && !form.getImage().isEmpty()) {
-            String imagePath =
+        boolean imageReplaced =
+                form.getImage() != null && !form.getImage().isEmpty();
+
+        if (imageReplaced) {
+            String newImagePath =
                     fileStorageService.saveProductImage(form.getImage());
 
-            product.setImg(imagePath);
+            product.setImg(newImagePath);
         }
 
-        return repo.save(product);
+        Product updatedProduct = repo.save(product);
+
+        if (imageReplaced && oldImagePath != null) {
+            deleteImageAfterCommit(oldImagePath);
+        }
+
+        return updatedProduct;
+    }
+
+    @Transactional
+    public void delete(int id) {
+        Product product = repo.findById(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Товар с id " + id + " не найден"
+                        )
+                );
+
+        String imagePath = product.getImg();
+
+        repo.delete(product);
+
+        if (imagePath != null) {
+            deleteImageAfterCommit(imagePath);
+        }
+    }
+
+    private void deleteImageAfterCommit(String imagePath) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            fileStorageService.deleteProductImage(imagePath);
+                        }
+                    }
+            );
+        } else {
+            fileStorageService.deleteProductImage(imagePath);
+        }
     }
 
     @Transactional

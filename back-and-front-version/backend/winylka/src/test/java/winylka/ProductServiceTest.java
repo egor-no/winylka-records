@@ -202,10 +202,9 @@ class ProductServiceTest {
                 result.getImg()
         );
 
-        verify(fileStorageService, never())
-                .saveProductImage(any());
-
+        verify(fileStorageService, never()).saveProductImage(any());
         verify(repository).save(existing);
+        verify(fileStorageService, never()).deleteProductImage(anyString());
     }
 
     @Test
@@ -242,6 +241,7 @@ class ProductServiceTest {
 
         verify(fileStorageService).saveProductImage(newImage);
         verify(repository).save(existing);
+        verify(fileStorageService).deleteProductImage("/files/products/old-cover.jpg");
     }
 
     @Test
@@ -278,6 +278,60 @@ class ProductServiceTest {
         );
 
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void shouldDeleteProductAndItsImage() {
+        Product product = createExistingProduct();
+        product.setImg("/files/products/brat.png");
+
+        when(repository.findById(1))
+                .thenReturn(Optional.of(product));
+
+        productService.delete(1);
+
+        verify(repository).delete(product);
+
+        verify(fileStorageService)
+                .deleteProductImage(
+                        "/files/products/brat.png"
+                );
+    }
+
+    @Test
+    void shouldDeleteProductWithoutImage() {
+        Product product = createExistingProduct();
+        product.setImg(null);
+
+        when(repository.findById(1))
+                .thenReturn(Optional.of(product));
+
+        productService.delete(1);
+
+        verify(repository).delete(product);
+
+        verify(fileStorageService, never())
+                .deleteProductImage(anyString());
+    }
+
+    @Test
+    void shouldFailWhenDeletingMissingProduct() {
+        when(repository.findById(99))
+                .thenReturn(Optional.empty());
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> productService.delete(99)
+        );
+
+        assertEquals(
+                "Товар с id 99 не найден",
+                exception.getMessage()
+        );
+
+        verify(repository, never()).delete(any());
+        verify(fileStorageService, never())
+                .deleteProductImage(anyString());
     }
 
     private ProductForm createValidForm() {
