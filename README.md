@@ -1,7 +1,7 @@
 
 # Winylka Shop
 
-Winylka Shop is a learning full-stack e-commerce project for a fictional vinyl record store. It combines a Vue 3 frontend with a Spring Boot REST API and demonstrates product browsing, filtering, shopping cart management and order checkout.
+Winylka Shop is a learning full-stack e-commerce project for a fictional vinyl record store. It combines a Vue 3 frontend with a Spring Boot REST API backed by PostgreSQL and demonstrates product browsing, filtering, shopping cart management and order processing.
 
 ---
 
@@ -22,7 +22,11 @@ Winylka Shop is a learning full-stack e-commerce project for a fictional vinyl r
 - Java 17
 - Spring Boot 3
 - Spring Web
+- Spring Events
+- PostgreSQL
 - REST API
+- JUnit 5
+- Mockito
 - Maven
 - Embedded Tomcat
 
@@ -33,15 +37,21 @@ Winylka Shop is a learning full-stack e-commerce project for a fictional vinyl r
 ## 🚀 Features
 
 - Browse a catalogue of vinyl records
-- Search albums by artist or title
-- Filter products by price
-- Filter special offers
-- Shopping cart with quantity management
-- Order summary with live total calculation
-- Checkout page with customer information
-- Order submission via REST API
-- Responsive component-based Vue architecture
-- Retro-inspired record store interface
+- Product search and price filtering
+- Sale & Good Offer labels
+- Out-of-stock handling
+- Shopping cart with stock validation
+- Customer checkout
+- Admin dashboard
+- Product management
+- Inventory restocking
+- Order management & shipment tracking
+- Product image upload
+- Customer restock subscriptions
+- Domain events using Spring Events
+- Event-driven notification architecture
+- PostgreSQL persistence
+- Unit tests with JUnit 5 & Mockito
 
 ---
 
@@ -87,6 +97,28 @@ The order is submitted to the Spring Boot REST API.
 
 ---
 
+## ⚙️ Backend Highlights
+
+The backend follows a layered architecture with:
+
+- REST API
+- Service layer
+- Repository pattern
+- PostgreSQL persistence
+- DTO-based communication
+- Domain events using Spring Application Events
+- Transactional event listeners
+- Unit tests with Mockito
+
+Current domain events:
+
+- ProductRestockedEvent
+- OrderShippedEvent
+
+The notification layer is intentionally decoupled from the business logic, allowing local Spring events to be replaced with Kafka with minimal changes.
+
+---
+
 ## 📸 Screenshots
 
 ### Catalogue
@@ -100,6 +132,18 @@ The order is submitted to the Spring Boot REST API.
 ### About Page
 
 ![About Page](docs/screenshots/about-page.JPG)
+
+### Product Page (Restock Subscription)
+
+![Product Page](docs/screenshots/product-page.JPG)
+
+### Admin Stock Management
+
+![Admin Stock Management](docs/screenshots/admin-stock.JPG)
+
+### Admin Order Management
+
+![Admin Order Management](docs/screenshots/admin-order-list.JPG)
 
 ---
 
@@ -148,3 +192,12 @@ Start the Vue frontend:
 npm install
 npm run dev
 ```
+
+## 🔜 Planned Features
+
+- Kafka integration
+- Email notifications
+- Authentication & authorization
+- Docker support
+- Payment simulation
+- Product categories
