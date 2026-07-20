@@ -1,7 +1,7 @@
 <template>
   <div
     class="admin-modal-overlay"
-    @click.self="$emit('close')"
+    @click.self="requestClose"
   >
     <section class="admin-dialog product-editor">
       <div class="admin-dialog-titlebar">
@@ -13,7 +13,7 @@
           type="button"
           class="window-close-btn"
           :disabled="saving"
-          @click="$emit('close')"
+          @click="requestClose"
         >
           ×
         </button>
@@ -186,7 +186,7 @@
             type="button"
             class="dialog-btn"
             :disabled="saving"
-            @click="$emit('close')"
+            @click="requestClose"
           >
             CANCEL
           </button>
@@ -237,6 +237,20 @@ export default {
   computed: {
     isEditMode() {
       return Boolean(this.product)
+    },
+
+    isDirty() {
+      return (
+        this.form.artist ||
+        this.form.name ||
+        this.form.catNo ||
+        this.form.format ||
+        this.form.note ||
+        this.form.description ||
+        this.form.price !== '' ||
+        Number(this.form.stockQuantity) > 0 ||
+        this.selectedFile
+      )
     }
   },
 
@@ -302,6 +316,17 @@ export default {
       if (this.generatedPreviewUrl) {
         URL.revokeObjectURL(this.generatedPreviewUrl)
         this.generatedPreviewUrl = ''
+      }
+    },
+
+    requestClose() {
+      if (!this.isDirty) {
+        this.$emit('close')
+        return
+      }
+
+      if (window.confirm('Discard unsaved changes?')) {
+        this.$emit('close')
       }
     },
 

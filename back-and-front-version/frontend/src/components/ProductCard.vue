@@ -9,6 +9,7 @@
       >
 
       <button
+        v-if="availableStock > 0"
         @click.stop="$emit('add', item)"
         class="image-cart-button"
         :class="isInCart(item) ? 'added' : 'to-add'"
@@ -31,12 +32,14 @@
       <div class="product-price">{{ currency(item.price) }}</div>
 
       <div class="product-tags">
-        <span v-if="item.price < sale" class="tag tag-sale">SALE!</span>
-        <span v-else-if="item.price < cheap" class="tag tag-good">
-          GOOD OFFER!
-        </span>
+        <span v-if="availableStock <= 0" class="tag tag-out-of-stock">OUT OF STOCK</span>
+  
+        <template v-else>
+          <span v-if="item.price < sale" class="tag tag-sale">SALE!</span>
+          <span v-else-if="item.price < cheap" class="tag tag-good">GOOD OFFER!</span>
+        </template>
 
-        <span class="tag tag-format">{{ item.format }}</span>
+          <span class="tag tag-format">{{ item.format }}</span>
       </div>
     </div>
   </article>
@@ -66,13 +69,19 @@ export default {
     }
   },
   emits: ['add'],
+  computed: {
+      availableStock() {
+        const stock = Number(this.item.stockQuantity)
+        return Number.isFinite(stock)? Math.max(0, stock) : 0
+      }
+  },
   methods: {
     currency(value) {
       return formatCurrency(value);
     },
     goToProduct() {
       this.$router.push(`/product/${this.item.id}`)
-    } 
+    }
   }
 }
 </script>

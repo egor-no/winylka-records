@@ -1,4 +1,4 @@
-package winylka.model;
+package winylka.dto;
 
 import java.util.List;
 

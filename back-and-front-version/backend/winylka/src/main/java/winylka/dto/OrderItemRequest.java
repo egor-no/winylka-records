@@ -1,4 +1,4 @@
-package winylka.model;
+package winylka.dto;
 
 public class OrderItemRequest {
     private int productId;

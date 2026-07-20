@@ -1,12 +1,17 @@
 package winylka.service;
 
 import org.springframework.transaction.annotation.Transactional;
+import winylka.dto.OrderItemRequest;
+import winylka.dto.OrderRequest;
+import winylka.dto.OrderResponse;
 import winylka.infra.OrderRepository;
 import winylka.model.*;
- import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Service
 public class OrderService {
@@ -37,32 +42,49 @@ public class OrderService {
 
         BigDecimal total = BigDecimal.ZERO;
 
-        for (OrderItemRequest requestedItem : req.getItems()) {
-            if (requestedItem.getAmount() <= 0) {
+        Map<Integer, Integer> requestedAmounts = new LinkedHashMap<>();
+
+        for (OrderItemRequest item : req.getItems()) {
+            if (item.getAmount() <= 0) {
                 throw new IllegalArgumentException(
-                        "Invalid amount for productId=" + requestedItem.getProductId()
+                        "Invalid amount for productId=" + item.getProductId()
                 );
             }
 
-            Product product = products.findById(requestedItem.getProductId());
+            requestedAmounts.merge(
+                    item.getProductId(),
+                    item.getAmount(),
+                    Math::addExact
+            );
+        }
+
+        for (Map.Entry<Integer, Integer> entry : requestedAmounts.entrySet()) {
+            int productId = entry.getKey();
+            int requestedAmount = entry.getValue();
+
+            Product product = products.findById(productId);
 
             if (product == null) {
                 throw new IllegalArgumentException(
-                        "Unknown productId=" + requestedItem.getProductId()
+                        "Unknown productId=" + productId
+                );
+            }
+
+            int stockQuantity = product.getStockQuantity() == null
+                    ? 0
+                    : product.getStockQuantity();
+
+            if (stockQuantity < requestedAmount) {
+                throw new IllegalArgumentException(
+                        "Only " + stockQuantity
+                                + " copies of \"" + product.getArtist()
+                                + " — " + product.getName()
+                                + "\" are available"
                 );
             }
 
             BigDecimal lineTotal = product.getPrice()
-                    .multiply(BigDecimal.valueOf(requestedItem.getAmount()));
-
-            int requestedAmount = requestedItem.getAmount();
-            Integer stockQuantity = product.getStockQuantity();
-
-            if (stockQuantity == null || stockQuantity < requestedAmount) {
-                throw new IllegalArgumentException(
-                        "Not enough stock for productId=" + product.getId()
-                );
-            }
+                    .multiply(BigDecimal.valueOf(requestedAmount));
 
             CustomerOrderItem item = new CustomerOrderItem();
             item.setProduct(product);
@@ -72,6 +94,7 @@ public class OrderService {
 
             order.addItem(item);
             total = total.add(lineTotal);
+
             product.setStockQuantity(stockQuantity - requestedAmount);
         }
 

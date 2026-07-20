@@ -32,13 +32,15 @@
           <input
             type="number"
             min="1"
+            :max="stockOf(line)"
             class="qty-input"
-            v-model.number="line.amount"
-            @change="onChangeAmount(line, line.amount)"
+            :value="line.amount"
+            @change="onAmountInput(line, $event)"
           >
           <button
             type="button"
             class="qty-btn"
+            :disabled="line.amount >= stockOf(line)"
             @click="onChangeAmount(line, line.amount + 1)"
           >
             +
@@ -89,13 +91,33 @@ export default {
     currency(value) {
       return formatCurrency(value)
     },
-    onChangeAmount(line, newAmount) {
-        if (newAmount <= 0 || Number.isNaN(newAmount)) {
-            this.$emit('remove-line', line)
-            return
-        }
-        this.$emit('change-amount', line, newAmount)
+
+    stockOf(line) {
+      const stock = Number(line?.item?.stockQuantity)
+      return Number.isFinite(stock) ? Math.max(0, stock) : 0
     },
+
+    onAmountInput(line, event) {
+      this.onChangeAmount(line, Number(event.target.value))
+    },
+
+    onChangeAmount(line, newAmount) {
+      if (!Number.isInteger(newAmount) || newAmount <= 0) {
+        this.$emit('remove-line', line)
+        return
+      }
+
+      const stock = this.stockOf(line)
+      const safeAmount = Math.min(newAmount, stock)
+
+      if (safeAmount <= 0) {
+        this.$emit('remove-line', line)
+        return
+      }
+
+      this.$emit('change-amount', line, safeAmount)
+    },
+
     onRemove(line) {
       this.$emit('remove-line', line)
     }
@@ -198,5 +220,10 @@ export default {
 .checkout-totals-row--grand {
   margin-top: 8px;
   font-weight: 600;
+}
+
+.qty-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 </style>

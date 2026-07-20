@@ -284,6 +284,16 @@ body {
   background: #000;
 }
 
+.tag-out-of-stock {
+  background: #7a3131;
+  color: #fff3d9;
+}
+
+.product-card:has(.tag-out-of-stock) .product-image {
+  opacity: 0.72;
+  filter: saturate(0.7);
+}
+
 .filter-bar {
   display: flex;
   justify-content: space-between;

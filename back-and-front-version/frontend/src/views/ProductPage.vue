@@ -38,7 +38,10 @@
         <p class="product-meta">
           <span class="product-label">Format:</span>
           <span class="product-value">
-            {{ product.format }} — {{ product.note }}
+            {{ product.format }}
+            <template v-if="product.note">
+              — {{ product.note }}
+            </template>
           </span>
         </p>
 
@@ -56,38 +59,69 @@
           </span>
         </p>
 
-        <div class="product-qty-row">
-          <label class="product-label">
-            Quantity
-            <input
-              v-model.number="qty"
-              type="number"
-              min="1"
-              class="product-qty-input"
+        <template v-if="availableStock > 0">
+          <div class="product-qty-row">
+            <label class="product-label">
+              Quantity
+
+              <input
+                v-model.number="qty"
+                type="number"
+                min="1"
+                :max="maxAddableAmount"
+                class="product-qty-input"
+              >
+            </label>
+
+            <span class="product-stock-hint">
+              Available: {{ availableStock }}
+            </span>
+
+            <span
+              v-if="inCartCount > 0"
+              class="product-in-cart-hint"
             >
-          </label>
+              In cart: {{ inCartCount }}
+            </span>
+          </div>
 
-          <span
-            v-if="inCartCount > 0"
-            class="product-in-cart-hint"
-          >
-            In cart: {{ inCartCount }}
-          </span>
-        </div>
+          <div class="product-actions">
+            <button
+              type="button"
+              class="product-add-btn"
+              :disabled="maxAddableAmount <= 0"
+              @click="addToCart"
+            >
+              {{
+                maxAddableAmount > 0
+                  ? 'Add to cart'
+                  : 'Maximum in cart'
+              }}
+            </button>
 
-        <div class="product-actions">
-          <button
-            type="button"
-            class="product-add-btn"
-            @click="addToCart"
-          >
-            Add to cart
-          </button>
+            <RouterLink
+              to="/catalogue"
+              class="product-secondary-link"
+            >
+              Back to catalogue
+            </RouterLink>
+          </div>
+        </template>
 
-          <RouterLink to="/catalogue" class="product-secondary-link">
-            Back to catalogue
-          </RouterLink>
-        </div>
+        <template v-else>
+          <div class="product-out-of-stock-row">
+            <span class="tag tag-out-of-stock">
+              OUT OF STOCK
+            </span>
+
+            <RouterLink
+              to="/catalogue"
+              class="product-secondary-link"
+            >
+              Back to catalogue
+            </RouterLink>
+          </div>
+        </template>
       </div>
     </div>
   </section>
@@ -114,6 +148,38 @@ export default {
     }
   },
   emits: ['add-to-cart', 'delete-from-cart', 'update-cart'],
+  computed: {
+    availableStock() {
+      if (!this.product) {
+        return 0
+      }
+
+      const stock = Number(this.product.stockQuantity)
+
+      return Number.isFinite(stock)
+        ? Math.max(0, stock)
+        : 0
+    },
+
+    inCartCount() {
+      if (!this.product || !Array.isArray(this.cartObjects)) {
+        return 0
+      }
+
+      const line = this.cartObjects.find(
+        line => line.item?.id === this.product.id
+      )
+
+      return line ? Number(line.amount) : 0
+    },
+
+    maxAddableAmount() {
+      return Math.max(
+        0,
+        this.availableStock - this.inCartCount
+      )
+    }
+  },
   data() {
     return {
       product: null,
@@ -149,9 +215,20 @@ export default {
       }
     },
     addToCart() {
-      if (!this.product || this.qty < 1) return
+      if (!this.product || this.maxAddableAmount <= 0) {
+        return
+      }
 
-      const count = Number.isNaN(this.qty) ? 1 : this.qty
+      let count = Number(this.qty)
+
+      if (!Number.isInteger(count) || count < 1) {
+        count = 1
+      }
+
+      count = Math.min(
+        count,
+        this.maxAddableAmount
+      )
 
       for (let i = 0; i < count; i++) {
         this.$emit('add-to-cart', this.product)
@@ -162,18 +239,6 @@ export default {
     deleteFromCart(product) {
       this.$emit('delete-from-cart', product)
     }
-  },
-    computed: {
-      inCartCount() {
-        if (!this.product) return 0
-        if (!Array.isArray(this.cartObjects)) return 0
-        
-        const line = this.cartObjects.find(line => {
-          return line.item && line.item.id === this.product.id
-        })
-
-        return line ? line.amount : 0
-      }
   }
 }
 </script>
@@ -313,5 +378,26 @@ export default {
   padding: 2px 6px;
   border-radius: 4px;
   background: #fff3d9;
+}
+
+.product-stock-hint {
+  font-size: 12px;
+  color: #3c2a1a;
+}
+
+.product-out-of-stock-row {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-add-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.product-add-btn:disabled:hover {
+  background: #142f22;
 }
 </style>

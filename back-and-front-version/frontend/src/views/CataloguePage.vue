@@ -142,9 +142,36 @@ export default {
     currency(value) {
       return formatCurrency(value);
     },
-    addToCart(product) {
-      this.$emit('add-to-cart', product);
+    stockOf(product) {
+      const stock = Number(product?.stockQuantity)
+
+      return Number.isFinite(stock)
+        ? Math.max(0, stock)
+        : 0
     },
+
+    addToCart(product) {
+      const stock = this.stockOf(product)
+
+      if (stock <= 0) {
+        return
+      }
+
+      const cartLine = this.cartObjects.find(
+        line => line.item?.id === product.id
+      )
+
+      const amountInCart = cartLine
+        ? Number(cartLine.amount)
+        : 0
+
+      if (amountInCart >= stock) {
+        return
+      }
+
+      this.$emit('add-to-cart', product)
+    },
+
     deleteFromCart(product) {
       this.$emit('delete-from-cart', product);
     },
@@ -203,20 +230,31 @@ export default {
   },
   computed: {
     filteredProducts() {
-      const q = this.search.trim().toLowerCase();
+      const q = this.search.trim().toLowerCase()
 
-      return this.items.filter(item => {
+      const filtered = this.items.filter(item => {
         const matchesPrice = Number(item.price) <= this.max
 
         if (!q) {
-          return matchesPrice;
+          return matchesPrice
         }
 
-        const haystack = `${item.artist} ${item.name}`.toLowerCase();
-        const matchesSearch = haystack.includes(q);
+        const haystack =
+          `${item.artist} ${item.name}`.toLowerCase()
 
-        return matchesPrice && matchesSearch;
-      });
+        return matchesPrice && haystack.includes(q)
+      })
+
+      return filtered.sort((a, b) => {
+        const aOutOfStock = this.stockOf(a) === 0
+        const bOutOfStock = this.stockOf(b) === 0
+
+        if (aOutOfStock === bOutOfStock) {
+          return 0
+        }
+
+        return aOutOfStock ? 1 : -1
+      })
     }
   }
 }

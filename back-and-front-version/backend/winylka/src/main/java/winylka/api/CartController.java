@@ -3,8 +3,8 @@ package winylka.api;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import winylka.model.CartLineRequest;
-import winylka.model.CartResponse;
+import winylka.dto.CartLineRequest;
+import winylka.dto.CartResponse;
 import winylka.service.CartService;
 
 import java.util.List;

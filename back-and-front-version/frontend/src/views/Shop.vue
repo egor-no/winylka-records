@@ -49,9 +49,22 @@ export default {
       this.cartState = data
     },
 
-    async addToCart(product) {
-      const { data } = await cartApi.add(product.id, 1)
-      this.cartState = data
+   async addToCart(product) {
+    try {
+        const { data } = await cartApi.add(product.id, 1)
+
+        this.cartState = data
+      } catch (e) {
+        console.error(e)
+
+        const message =
+          e?.response?.data?.message
+          || 'Failed to add product to cart.'
+
+        alert(message)
+
+        await this.refreshCart()
+      }
     },
 
     async deleteFromCart(product) {
@@ -60,13 +73,26 @@ export default {
     },
 
     async updateCart(lines) {
-      // lines приходит в старом формате: [{ item, amount }]
-      const payload = lines.map(l => ({
-        productId: l.item.id,
-        amount: l.amount
+      const payload = lines.map(line => ({
+        productId: line.item.id,
+        amount: line.amount
       }))
-      const { data } = await cartApi.replace(payload)
-      this.cartState = data
+
+      try {
+        const { data } = await cartApi.replace(payload)
+
+        this.cartState = data
+      } catch (e) {
+        console.error(e)
+
+        const message =
+          e?.response?.data?.message
+          || 'Failed to update cart.'
+
+        alert(message)
+
+        await this.refreshCart()
+      }
     },
 
     isInCart(product) {
@@ -79,22 +105,38 @@ export default {
           customer: order.customer,
           shipping: order.shipping,
           comment: order.comment,
-          items: order.items.map(line => ({
-            productId: line.item.id,
-            amount: line.amount
-          }))
+          items: order.items
         }
 
         const { data } = await http.post('/orders', payload)
+
         console.log('Order created:', data)
 
         await cartApi.clear()
         await this.refreshCart()
 
-        this.$router.push({ name: 'checkout-success' })
+        sessionStorage.removeItem('shuffled-products-v2')
+
+        window.dispatchEvent(
+          new CustomEvent('winylka-products-updated')
+        )
+
+        this.$router.push({
+          name: 'checkout-success',
+          query: {
+            orderId: data.orderId
+          }
+        })
       } catch (e) {
         console.error(e)
-        alert('Failed to place order.')
+
+        const message =
+          e?.response?.data?.message
+          || 'Failed to place order.'
+
+        alert(message)
+
+        await this.refreshCart()
       }
     }
   }

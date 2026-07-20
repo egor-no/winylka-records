@@ -1,4 +1,6 @@
-package winylka.model;
+package winylka.dto;
+
+import winylka.model.Product;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

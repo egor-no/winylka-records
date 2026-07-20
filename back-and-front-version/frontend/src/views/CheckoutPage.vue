@@ -82,20 +82,32 @@ export default {
   },
   methods: {
     changeAmount(line, newAmount) {
-       if (newAmount <= 0 || Number.isNaN(newAmount)) {
-          this.removeLine(line)
-          return
-        }
+      if (!Number.isInteger(newAmount) || newAmount <= 0) {
+        this.removeLine(line)
+        return
+      }
 
-        const target = this.localLines.find(
-          l => l.item.id === line.item.id
-        )
+      const target = this.localLines.find(
+        item => item.item.id === line.item.id
+      )
 
-        if (target) {
-          target.amount = newAmount
-        }
+      if (!target) {
+        return
+      }
 
-        this.$emit('update-cart', this.localLines)
+      const stock = Number(target.item.stockQuantity)
+      const availableStock = Number.isFinite(stock)
+        ? Math.max(0, stock)
+        : 0
+
+      if (availableStock <= 0) {
+        this.removeLine(line)
+        return
+      }
+
+      target.amount = Math.min(newAmount, availableStock)
+
+      this.$emit('update-cart', this.localLines)
     },
     removeLine(line) {
       this.localLines = this.localLines.filter(
@@ -108,13 +120,26 @@ export default {
         return
       }
 
+      const invalidLine = this.localLines.find(line => {
+        const stock = Number(line.item.stockQuantity)
+
+        return !Number.isFinite(stock)
+          || stock <= 0
+          || line.amount <= 0
+          || line.amount > stock
+      })
+
+      if (invalidLine) {
+        return
+      }
+
       const order = {
         ...formData,
-        items: this.localLines,
-        totals: {
-          itemsTotal: this.itemsTotal
-        },
-        createdAt: new Date().toISOString()
+
+        items: this.localLines.map(line => ({
+          productId: line.item.id,
+          amount: line.amount
+        }))
       }
 
       this.$emit('place-order', order)

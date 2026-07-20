@@ -1,7 +1,7 @@
 package winylka.api;
 
-import winylka.model.OrderRequest;
-import winylka.model.OrderResponse;
+import winylka.dto.OrderRequest;
+import winylka.dto.OrderResponse;
 import winylka.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
