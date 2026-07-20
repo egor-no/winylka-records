@@ -2,8 +2,10 @@ package winylka;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 import winylka.dto.ProductForm;
+import winylka.event.ProductRestockedEvent;
 import winylka.infra.ProductRepository;
 import winylka.model.Product;
 import winylka.service.FileStorageService;
@@ -19,16 +21,19 @@ class ProductServiceTest {
 
     private ProductRepository repository;
     private FileStorageService fileStorageService;
+    private ApplicationEventPublisher eventPublisher;
     private ProductService productService;
 
     @BeforeEach
     void setUp() {
         repository = mock(ProductRepository.class);
         fileStorageService = mock(FileStorageService.class);
+        eventPublisher = mock(ApplicationEventPublisher.class);
 
         productService = new ProductService(
                 repository,
-                fileStorageService
+                fileStorageService,
+                eventPublisher
         );
     }
 
@@ -332,6 +337,46 @@ class ProductServiceTest {
         verify(repository, never()).delete(any());
         verify(fileStorageService, never())
                 .deleteProductImage(anyString());
+    }
+
+    @Test
+    void shouldPublishRestockEventWhenStockChangesFromZero() {
+        Product product = new Product();
+        product.setId(1);
+        product.setStockQuantity(0);
+
+        when(repository.findById(1))
+                .thenReturn(Optional.of(product));
+
+        when(repository.save(product))
+                .thenReturn(product);
+
+        productService.addStock(1, 3);
+
+        assertEquals(3, product.getStockQuantity());
+
+        verify(eventPublisher).publishEvent(
+                new ProductRestockedEvent(1)
+        );
+    }
+
+    @Test
+    void shouldNotPublishRestockEventWhenProductWasAlreadyInStock() {
+        Product product = new Product();
+        product.setId(1);
+        product.setStockQuantity(2);
+
+        when(repository.findById(1))
+                .thenReturn(Optional.of(product));
+
+        when(repository.save(product))
+                .thenReturn(product);
+
+        productService.addStock(1, 3);
+
+        assertEquals(5, product.getStockQuantity());
+
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     private ProductForm createValidForm() {

@@ -37,12 +37,12 @@
 
         <p class="product-meta">
           <span class="product-label">Format:</span>
-          <span class="product-value">
-            {{ product.format }}
-            <template v-if="product.note">
-              — {{ product.note }}
-            </template>
-          </span>
+        <span class="product-value">
+          {{ product.format }}
+          <template v-if="product.note">
+            — {{ product.note }}
+          </template>
+        </span>
         </p>
 
         <p
@@ -114,6 +114,14 @@
               OUT OF STOCK
             </span>
 
+            <button
+              type="button"
+              class="product-notify-btn"
+              @click="$emit('subscribe-to-restock', product)"
+            >
+              Notify me
+            </button>
+
             <RouterLink
               to="/catalogue"
               class="product-secondary-link"
@@ -147,7 +155,7 @@ export default {
       required: true
     }
   },
-  emits: ['add-to-cart', 'delete-from-cart', 'update-cart'],
+  emits: ['add-to-cart', 'delete-from-cart', 'update-cart', 'subscribe-to-restock'],
   computed: {
     availableStock() {
       if (!this.product) {
@@ -400,4 +408,5 @@ export default {
 .product-add-btn:disabled:hover {
   background: #142f22;
 }
+
 </style>

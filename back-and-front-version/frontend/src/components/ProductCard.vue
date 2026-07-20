@@ -18,6 +18,15 @@
       >
         🛒
       </button>
+
+      <button
+        v-else
+        @click.stop="$emit('subscribe-to-restock', item)"
+        class="image-cart-button notify"
+        title="Notify me"
+      >
+        🔔︎
+      </button>
     </div>
 
     <div class="product-body">
@@ -25,7 +34,12 @@
         {{ item.artist }} – {{ item.name }}
       </h3>
 
-      <p class="product-note">{{ item.note }}</p>
+      <p
+        v-if="item.note"
+        class="product-note"
+      >
+        {{ item.note }}
+      </p>
     </div>
 
     <div class="product-bottom">
@@ -33,7 +47,7 @@
 
       <div class="product-tags">
         <span v-if="availableStock <= 0" class="tag tag-out-of-stock">OUT OF STOCK</span>
-  
+    
         <template v-else>
           <span v-if="item.price < sale" class="tag tag-sale">SALE!</span>
           <span v-else-if="item.price < cheap" class="tag tag-good">GOOD OFFER!</span>
@@ -68,7 +82,7 @@ export default {
       required: true
     }
   },
-  emits: ['add'],
+  emits: ['add', 'subscribe-to-restock'],
   computed: {
       availableStock() {
         const stock = Number(this.item.stockQuantity)

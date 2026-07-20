@@ -9,20 +9,40 @@
       @delete-from-cart="deleteFromCart"
       @update-cart="updateCart"
       @place-order="handlePlaceOrder"
+      @subscribe-to-restock="openRestockSubscription"
     />
   </RouterView>
+  <AppNotice
+    :visible="notice.visible"
+    :message="notice.message"
+    :product="notice.product"
+    @close="closeNotice"
+  />
 </template>
 
 <script>
 import { formatCurrency } from '../utils/formatters'
 import { http } from '../api/http'
 import { cartApi } from '../api/cart'
+import AppNotice from '../components/AppNotice.vue'
 
 export default {
   name: 'Shop',
+  components: {
+    AppNotice
+  },
   data() {
     return {
-      cartState: { lines: [], itemsTotal: 0 }
+      cartState: {
+        lines: [],
+        itemsTotal: 0
+      },
+
+      notice: {
+        visible: false,
+        message: '',
+        product: null
+      }
     }
   },
   computed: {
@@ -61,7 +81,7 @@ export default {
           e?.response?.data?.message
           || 'Failed to add product to cart.'
 
-        alert(message)
+        this.showNotice(message, product)
 
         await this.refreshCart()
       }
@@ -89,7 +109,7 @@ export default {
           e?.response?.data?.message
           || 'Failed to update cart.'
 
-        alert(message)
+        this.showNotice(message)
 
         await this.refreshCart()
       }
@@ -134,9 +154,31 @@ export default {
           e?.response?.data?.message
           || 'Failed to place order.'
 
-        alert(message)
+        this.showNotice(message)
 
         await this.refreshCart()
+      }
+    },
+    showNotice(message, product = null) {
+      this.notice = {
+        visible: true,
+        message,
+        product
+      }
+    },
+    openRestockSubscription(product) {
+      this.notice = {
+        visible: true,
+        message:
+          `"${product.artist} — ${product.name}" is currently out of stock.`,
+        product
+      }
+    },
+    closeNotice() {
+      this.notice = {
+        visible: false,
+        message: '',
+        product: null
       }
     }
   }

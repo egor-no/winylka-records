@@ -75,6 +75,7 @@
         :sale="sale"
         :is-in-cart="isInCart"
         @add="addToCart"
+        @subscribe-to-restock="subscribeToRestock"
       />
     </div>
   </div>
@@ -108,7 +109,7 @@ export default {
       required: true
     }
   },
-  emits: ['add-to-cart', 'delete-from-cart', 'update-cart'],
+  emits: ['add-to-cart','delete-from-cart','update-cart','subscribe-to-restock'],
   data() {
     return {
       max: 200,
@@ -174,6 +175,9 @@ export default {
 
     deleteFromCart(product) {
       this.$emit('delete-from-cart', product);
+    },
+    subscribeToRestock(product) {
+      this.$emit('subscribe-to-restock', product)
     },
     setMax(value) {
       this.max = value;

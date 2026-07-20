@@ -656,3 +656,33 @@ body {
 .section-header {
   position: relative;
 }
+
+.product-notify-btn {
+  padding: 5px 10px;
+  border: 1px solid #142f22;
+  border-radius: 5px;
+  background: transparent;
+  color: #142f22;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.product-notify-btn:hover {
+  background: #142f22;
+  color: #e0c494;
+}
+
+.image-cart-button.notify {
+  background: rgba(20, 47, 34, 0.9);
+  color: #e0c494;
+  border: 1px solid #0e2319;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.image-cart-button.notify:hover {
+  background: rgba(30, 70, 50, 1);
+  transform: scale(1.05);
+}

@@ -1,10 +1,12 @@
 package winylka.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import winylka.dto.ProductForm;
+import winylka.event.ProductRestockedEvent;
 import winylka.infra.ProductRepository;
 import winylka.model.Product;
 
@@ -22,13 +24,16 @@ public class ProductService {
 
     private final ProductRepository repo;
     private final FileStorageService fileStorageService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ProductService(
             ProductRepository repo,
-            FileStorageService fileStorageService
+            FileStorageService fileStorageService,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.repo = repo;
         this.fileStorageService = fileStorageService;
+        this.eventPublisher = eventPublisher;
     }
 
     public List<Product> findAll(
@@ -140,6 +145,7 @@ public class ProductService {
         validate(form);
 
         String oldImagePath = product.getImg();
+        int oldStock = stockOf(product);
 
         copyFormToProduct(form, product);
 
@@ -154,6 +160,12 @@ public class ProductService {
         }
 
         Product updatedProduct = repo.save(product);
+
+        publishRestockIfNeeded(
+                updatedProduct.getId(),
+                oldStock,
+                stockOf(updatedProduct)
+        );
 
         if (imageReplaced && oldImagePath != null) {
             deleteImageAfterCommit(oldImagePath);
@@ -210,13 +222,19 @@ public class ProductService {
                         )
                 );
 
-        int currentStock = product.getStockQuantity() == null
-                ? 0
-                : product.getStockQuantity();
+        int oldStock = stockOf(product);
 
-        product.setStockQuantity(currentStock + quantity);
+        product.setStockQuantity(oldStock + quantity);
 
-        return repo.save(product);
+        Product updatedProduct = repo.save(product);
+
+        publishRestockIfNeeded(
+                product.getId(),
+                oldStock,
+                stockOf(updatedProduct)
+        );
+
+        return updatedProduct;
     }
 
     private void copyFormToProduct(ProductForm form, Product product) {
@@ -264,5 +282,25 @@ public class ProductService {
         }
 
         return value.trim();
+    }
+
+    private int stockOf(Product product) {
+        Integer stock = product.getStockQuantity();
+
+        return stock == null
+                ? 0
+                : Math.max(stock, 0);
+    }
+
+    private void publishRestockIfNeeded(
+            int productId,
+            int oldStock,
+            int newStock
+    ) {
+        if (oldStock <= 0 && newStock > 0) {
+            eventPublisher.publishEvent(
+                    new ProductRestockedEvent(productId)
+            );
+        }
     }
 }
