@@ -42,6 +42,16 @@ public class CustomerOrder {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status;
+
+    @Column(name = "shipped_at")
+    private Instant shippedAt;
+
+    @Column(name = "tracking_number")
+    private String trackingNumber;
+
     @OneToMany(
             mappedBy = "order",
             cascade = CascadeType.ALL,
@@ -140,5 +150,29 @@ public class CustomerOrder {
 
     public void setItems(List<CustomerOrderItem> items) {
         this.items = items;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
+
+    public Instant getShippedAt() {
+        return shippedAt;
+    }
+
+    public void setShippedAt(Instant shippedAt) {
+        this.shippedAt = shippedAt;
+    }
+
+    public String getTrackingNumber() {
+        return trackingNumber;
+    }
+
+    public void setTrackingNumber(String trackingNumber) {
+        this.trackingNumber = trackingNumber;
     }
 }

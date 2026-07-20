@@ -7,6 +7,9 @@ import Product from '../views/ProductPage.vue'
 import NotFound from '../views/NotFoundPage.vue'
 import CheckoutSuccess from '../views/CheckoutSuccessPage.vue'
 import AdminProductsPage from '../views/AdminProductsPage.vue'
+import AdminLayout from '../views/AdminLayout.vue'
+import AdminOrdersPage from '../views/AdminOrdersPage.vue'
+import AdminOrderDetailsPage from '../views/AdminOrderDetailsPage.vue'
 
 const routes = [
   {
@@ -45,9 +48,30 @@ const routes = [
     component: AboutPage
   },
   {
-    path: '/admin',
-    name: 'admin-products',
-    component: AdminProductsPage
+  path: '/admin',
+    component: AdminLayout,
+    children: [
+      {
+        path: '',
+        redirect: { name: 'admin-products' }
+      },
+      {
+        path: 'products',
+        name: 'admin-products',
+        component: AdminProductsPage
+      },
+      {
+        path: 'orders',
+        name: 'admin-orders',
+        component: AdminOrdersPage
+      },
+      {
+        path: 'orders/:id',
+        name: 'admin-order-details',
+        component: AdminOrderDetailsPage,
+        props: true
+      }
+    ]
   },
   {
     path: '/404',
