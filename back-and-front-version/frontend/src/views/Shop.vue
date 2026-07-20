@@ -16,6 +16,7 @@
     :visible="notice.visible"
     :message="notice.message"
     :product="notice.product"
+    :subscription-type="notice.subscriptionType"
     @close="closeNotice"
   />
 </template>
@@ -38,10 +39,11 @@ export default {
         itemsTotal: 0
       },
 
-      notice: {
+     notice: {
         visible: false,
         message: '',
-        product: null
+        product: null,
+        subscriptionType: null
       }
     }
   },
@@ -81,7 +83,7 @@ export default {
           e?.response?.data?.message
           || 'Failed to add product to cart.'
 
-        this.showNotice(message, product)
+        this.showNotice(message)
 
         await this.refreshCart()
       }
@@ -159,26 +161,37 @@ export default {
         await this.refreshCart()
       }
     },
-    showNotice(message, product = null) {
+    showNotice(message) {
       this.notice = {
         visible: true,
         message,
-        product
+        product: null,
+        subscriptionType: null
       }
     },
-    openRestockSubscription(product) {
+    openRestockSubscription({ product, type }) {
+      if (!product || !type) {
+        return
+      }
+
+      const message =
+        type === 'STOCK_INCREASE'
+          ? `All currently available copies of "${product.artist} — ${product.name}" are already in your cart.`
+          : `"${product.artist} — ${product.name}" is currently out of stock.`
+
       this.notice = {
         visible: true,
-        message:
-          `"${product.artist} — ${product.name}" is currently out of stock.`,
-        product
+        message,
+        product,
+        subscriptionType: type
       }
     },
-    closeNotice() {
+   closeNotice() {
       this.notice = {
         visible: false,
         message: '',
-        product: null
+        product: null,
+        subscriptionType: null
       }
     }
   }

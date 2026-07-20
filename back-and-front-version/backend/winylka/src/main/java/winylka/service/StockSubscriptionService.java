@@ -8,6 +8,7 @@ import winylka.infra.ProductRepository;
 import winylka.infra.StockSubscriptionRepository;
 import winylka.model.Product;
 import winylka.model.StockSubscription;
+import winylka.model.StockSubscriptionType;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,14 +26,27 @@ public class StockSubscriptionService {
     private final StockSubscriptionRepository subscriptionRepository;
     private final ProductRepository productRepository;
 
-    public StockSubscriptionService(StockSubscriptionRepository subscriptionRepository, ProductRepository productRepository) {
+    public StockSubscriptionService(
+            StockSubscriptionRepository subscriptionRepository,
+            ProductRepository productRepository
+    ) {
         this.subscriptionRepository = subscriptionRepository;
         this.productRepository = productRepository;
     }
 
     @Transactional
-    public StockSubscriptionResponse subscribe(int productId, String rawEmail) {
+    public StockSubscriptionResponse subscribe(
+            int productId,
+            String rawEmail,
+            StockSubscriptionType type
+    ) {
         String email = normalizeEmail(rawEmail);
+
+        if (type == null) {
+            throw new IllegalArgumentException(
+                    "Subscription type is required"
+            );
+        }
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() ->
@@ -41,8 +55,14 @@ public class StockSubscriptionService {
                         )
                 );
 
+        validateSubscriptionType(product, type);
+
         StockSubscription existing = subscriptionRepository
-                .findByProductIdAndEmailIgnoreCase(productId, email)
+                .findByProductIdAndEmailIgnoreCaseAndType(
+                        productId,
+                        email,
+                        type
+                )
                 .orElse(null);
 
         if (existing != null && existing.isActive()) {
@@ -53,14 +73,12 @@ public class StockSubscriptionService {
         }
 
         if (existing != null) {
-            existing.setActive(true);
-            existing.setCreatedAt(LocalDateTime.now());
-            existing.setNotifiedAt(null);
+            reactivateSubscription(existing, product, type);
 
             subscriptionRepository.save(existing);
 
             return new StockSubscriptionResponse(
-                    "You will be notified when this item is back in stock.",
+                    getSuccessMessage(type),
                     false
             );
         }
@@ -69,43 +87,131 @@ public class StockSubscriptionService {
         subscription.setProduct(product);
         subscription.setEmail(email);
         subscription.setUserId(null);
+        subscription.setType(type);
         subscription.setActive(true);
+        subscription.setNotifiedAt(null);
+        subscription.setStockQuantityAtSubscription(
+                resolveStockQuantityAtSubscription(product, type)
+        );
 
         subscriptionRepository.save(subscription);
 
         return new StockSubscriptionResponse(
-                "You will be notified when this item is back in stock.",
+                getSuccessMessage(type),
                 false
         );
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void notifySubscribers(int productId) {
+    public void notifySubscribers(
+            int productId,
+            int oldStockQuantity,
+            int newStockQuantity
+    ) {
+        if (newStockQuantity <= oldStockQuantity) {
+            return;
+        }
+
         List<StockSubscription> subscriptions =
-                subscriptionRepository.findAllByProductIdAndActiveTrue(
-                        productId
-                );
+                subscriptionRepository.findAllByProductIdAndActiveTrue(productId);
 
         if (subscriptions.isEmpty()) {
             return;
         }
 
-        for (StockSubscription subscription : subscriptions) {
-            /*
-             * Здесь позже будет EmailService или отправка события в Kafka.
-             */
-            System.out.println(
-                    "RESTOCK NOTIFICATION: productId="
-                            + productId
-                            + ", email="
-                            + subscription.getEmail()
-            );
+        LocalDateTime notifiedAt = LocalDateTime.now();
 
-            subscription.setActive(false);
-            subscription.setNotifiedAt(LocalDateTime.now());
+        List<StockSubscription> notifiedSubscriptions =
+                subscriptions.stream()
+                        .filter(subscription ->
+                                shouldNotify(
+                                        subscription,
+                                        oldStockQuantity,
+                                        newStockQuantity
+                                )
+                        )
+                        .peek(subscription -> {
+                            System.out.println(
+                                    "RESTOCK NOTIFICATION: productId="
+                                            + productId
+                                            + ", email="
+                                            + subscription.getEmail()
+                                            + ", type="
+                                            + subscription.getType()
+                            );
+
+                            subscription.setActive(false);
+                            subscription.setNotifiedAt(notifiedAt);
+                        })
+                        .toList();
+
+        if (!notifiedSubscriptions.isEmpty()) {
+            subscriptionRepository.saveAll(notifiedSubscriptions);
+        }
+    }
+
+    private boolean shouldNotify(
+            StockSubscription subscription,
+            int oldStockQuantity,
+            int newStockQuantity
+    ) {
+        if (subscription.getType() == StockSubscriptionType.OUT_OF_STOCK) {
+            return oldStockQuantity == 0 && newStockQuantity > 0;
         }
 
-        subscriptionRepository.saveAll(subscriptions);
+        if (subscription.getType() == StockSubscriptionType.STOCK_INCREASE) {
+            Integer subscribedAt =
+                    subscription.getStockQuantityAtSubscription();
+
+            return subscribedAt != null
+                    && newStockQuantity > subscribedAt;
+        }
+
+        return false;
+    }
+
+    private void validateSubscriptionType(
+            Product product,
+            StockSubscriptionType type
+    ) {
+        if (type == StockSubscriptionType.OUT_OF_STOCK
+                && product.getStockQuantity() > 0) {
+            throw new IllegalArgumentException(
+                    "This product is currently in stock"
+            );
+        }
+    }
+
+    private void reactivateSubscription(
+            StockSubscription subscription,
+            Product product,
+            StockSubscriptionType type
+    ) {
+        subscription.setActive(true);
+        subscription.setCreatedAt(LocalDateTime.now());
+        subscription.setNotifiedAt(null);
+        subscription.setStockQuantityAtSubscription(
+                resolveStockQuantityAtSubscription(product, type)
+        );
+    }
+
+    private Integer resolveStockQuantityAtSubscription(
+            Product product,
+            StockSubscriptionType type
+    ) {
+        if (type == StockSubscriptionType.STOCK_INCREASE) {
+            return product.getStockQuantity();
+        }
+
+        return null;
+    }
+
+    private String getSuccessMessage(StockSubscriptionType type) {
+        if (type == StockSubscriptionType.STOCK_INCREASE) {
+            return "You will be notified when more copies are added.";
+        }
+
+        return "You will be notified when this item is back in stock.";
     }
 
     private String normalizeEmail(String rawEmail) {
@@ -119,7 +225,8 @@ public class StockSubscriptionService {
                 .trim()
                 .toLowerCase(Locale.ROOT);
 
-        if (email.length() > 255 || !EMAIL_PATTERN.matcher(email).matches()) {
+        if (email.length() > 255
+                || !EMAIL_PATTERN.matcher(email).matches()) {
             throw new IllegalArgumentException(
                     "Please enter a valid email address"
             );

@@ -686,3 +686,14 @@ body {
   background: rgba(30, 70, 50, 1);
   transform: scale(1.05);
 }
+
+.product-stock-limit {
+  margin-top: 14px;
+}
+
+.product-stock-limit-message {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #7a5a32;
+}

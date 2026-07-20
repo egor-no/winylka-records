@@ -297,9 +297,13 @@ public class ProductService {
             int oldStock,
             int newStock
     ) {
-        if (oldStock <= 0 && newStock > 0) {
+        if (newStock > oldStock) {
             eventPublisher.publishEvent(
-                    new ProductRestockedEvent(productId)
+                    new ProductRestockedEvent(
+                            productId,
+                            oldStock,
+                            newStock
+                    )
             );
         }
     }

@@ -21,9 +21,9 @@
 
       <button
         v-else
-        @click.stop="$emit('subscribe-to-restock', item)"
+        @click.stop="subscribeToRestock"
         class="image-cart-button notify"
-        title="Notify me"
+        title="Notify me when available"
       >
         🔔︎
       </button>
@@ -89,13 +89,21 @@ export default {
         return Number.isFinite(stock)? Math.max(0, stock) : 0
       }
   },
-  methods: {
-    currency(value) {
-      return formatCurrency(value);
-    },
-    goToProduct() {
-      this.$router.push(`/product/${this.item.id}`)
+    methods: {
+      currency(value) {
+        return formatCurrency(value)
+      },
+
+      goToProduct() {
+        this.$router.push(`/product/${this.item.id}`)
+      },
+
+      subscribeToRestock() {
+        this.$emit('subscribe-to-restock', {
+          product: this.item,
+          type: 'OUT_OF_STOCK'
+        })
+      }
     }
-  }
 }
 </script>

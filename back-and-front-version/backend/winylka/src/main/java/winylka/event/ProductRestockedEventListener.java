@@ -18,6 +18,10 @@ public class ProductRestockedEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(ProductRestockedEvent event) {
-        subscriptionService.notifySubscribers(event.productId());
+        subscriptionService.notifySubscribers(
+                event.getProductId(),
+                event.getOldStockQuantity(),
+                event.getNewStockQuantity()
+        );
     }
 }

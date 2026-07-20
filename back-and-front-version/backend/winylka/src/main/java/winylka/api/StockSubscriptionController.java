@@ -13,7 +13,9 @@ public class StockSubscriptionController {
 
     private final StockSubscriptionService subscriptionService;
 
-    public StockSubscriptionController(StockSubscriptionService subscriptionService) {
+    public StockSubscriptionController(
+            StockSubscriptionService subscriptionService
+    ) {
         this.subscriptionService = subscriptionService;
     }
 
@@ -25,7 +27,8 @@ public class StockSubscriptionController {
         StockSubscriptionResponse response =
                 subscriptionService.subscribe(
                         productId,
-                        request.getEmail()
+                        request.getEmail(),
+                        request.getType()
                 );
 
         return ResponseEntity.ok(response);

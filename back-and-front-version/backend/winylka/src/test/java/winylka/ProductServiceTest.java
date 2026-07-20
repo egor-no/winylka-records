@@ -2,6 +2,7 @@ package winylka;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 import winylka.dto.ProductForm;
@@ -355,13 +356,24 @@ class ProductServiceTest {
 
         assertEquals(3, product.getStockQuantity());
 
-        verify(eventPublisher).publishEvent(
-                new ProductRestockedEvent(1)
-        );
+        ArgumentCaptor<Object> eventCaptor =
+                ArgumentCaptor.forClass(Object.class);
+
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+        ProductRestockedEvent event =
+                assertInstanceOf(
+                        ProductRestockedEvent.class,
+                        eventCaptor.getValue()
+                );
+
+        assertEquals(1, event.getProductId());
+        assertEquals(0, event.getOldStockQuantity());
+        assertEquals(3, event.getNewStockQuantity());
     }
 
     @Test
-    void shouldNotPublishRestockEventWhenProductWasAlreadyInStock() {
+    void shouldPublishRestockEventWhenExistingStockIncreases() {
         Product product = new Product();
         product.setId(1);
         product.setStockQuantity(2);
@@ -375,6 +387,74 @@ class ProductServiceTest {
         productService.addStock(1, 3);
 
         assertEquals(5, product.getStockQuantity());
+
+        ArgumentCaptor<Object> eventCaptor =
+                ArgumentCaptor.forClass(Object.class);
+
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+        ProductRestockedEvent event =
+                assertInstanceOf(
+                        ProductRestockedEvent.class,
+                        eventCaptor.getValue()
+                );
+
+        assertEquals(1, event.getProductId());
+        assertEquals(2, event.getOldStockQuantity());
+        assertEquals(5, event.getNewStockQuantity());
+    }
+
+    @Test
+    void shouldPublishRestockEventWhenStockIncreasesDuringProductUpdate() {
+        Product existing = createExistingProduct();
+        existing.setStockQuantity(3);
+
+        ProductForm form = createValidForm();
+        form.setStockQuantity(8);
+
+        when(repository.findById(1))
+                .thenReturn(Optional.of(existing));
+
+        when(repository.save(existing))
+                .thenReturn(existing);
+
+        Product result = productService.update(1, form);
+
+        assertEquals(8, result.getStockQuantity());
+
+        ArgumentCaptor<Object> eventCaptor =
+                ArgumentCaptor.forClass(Object.class);
+
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+        ProductRestockedEvent event =
+                assertInstanceOf(
+                        ProductRestockedEvent.class,
+                        eventCaptor.getValue()
+                );
+
+        assertEquals(1, event.getProductId());
+        assertEquals(3, event.getOldStockQuantity());
+        assertEquals(8, event.getNewStockQuantity());
+    }
+
+    @Test
+    void shouldNotPublishRestockEventWhenStockDecreasesDuringProductUpdate() {
+        Product existing = createExistingProduct();
+        existing.setStockQuantity(8);
+
+        ProductForm form = createValidForm();
+        form.setStockQuantity(3);
+
+        when(repository.findById(1))
+                .thenReturn(Optional.of(existing));
+
+        when(repository.save(existing))
+                .thenReturn(existing);
+
+        Product result = productService.update(1, form);
+
+        assertEquals(3, result.getStockQuantity());
 
         verify(eventPublisher, never()).publishEvent(any());
     }

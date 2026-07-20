@@ -12,8 +12,10 @@ import winylka.infra.ProductRepository;
 import winylka.infra.StockSubscriptionRepository;
 import winylka.model.Product;
 import winylka.model.StockSubscription;
+import winylka.model.StockSubscriptionType;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,37 +37,37 @@ class ProductRestockedEventIntegrationTest {
     private PlatformTransactionManager transactionManager;
 
     @Test
-    void shouldPersistNotificationStatusAfterRestockEvent() {
+    void shouldNotifyOutOfStockSubscriptionWhenStockChangesFromZeroToPositive() {
         AtomicReference<Long> subscriptionId = new AtomicReference<>();
 
-        TransactionTemplate transactionTemplate =
-                new TransactionTemplate(transactionManager);
+        executeInTransaction(() -> {
+            Product product = productRepository.save(createProduct(0));
 
-        transactionTemplate.executeWithoutResult(status -> {
-            Product product = createProduct();
-            product = productRepository.save(product);
-
-            StockSubscription subscription = new StockSubscription();
-            subscription.setProduct(product);
-            subscription.setEmail("test@mail.com");
-            subscription.setActive(true);
-            subscription.setNotifiedAt(null);
+            StockSubscription subscription = createSubscription(
+                    product,
+                    "out-of-stock@mail.com",
+                    StockSubscriptionType.OUT_OF_STOCK,
+                    null
+            );
 
             subscription = subscriptionRepository.save(subscription);
             subscriptionId.set(subscription.getId());
 
             eventPublisher.publishEvent(
-                    new ProductRestockedEvent(product.getId())
+                    new ProductRestockedEvent(
+                            product.getId(),
+                            0,
+                            5
+                    )
             );
         });
 
         StockSubscription updatedSubscription =
-                subscriptionRepository.findById(subscriptionId.get())
-                        .orElseThrow();
+                findSubscription(subscriptionId.get());
 
         assertFalse(
                 updatedSubscription.isActive(),
-                "Subscription should become inactive after notification"
+                "OUT_OF_STOCK subscription should become inactive"
         );
 
         assertNotNull(
@@ -75,48 +77,157 @@ class ProductRestockedEventIntegrationTest {
     }
 
     @Test
-    void shouldNotProcessSubscriptionAgainAfterItWasNotified() {
+    void shouldNotifyStockIncreaseSubscriptionWhenStockExceedsSubscribedQuantity() {
         AtomicReference<Long> subscriptionId = new AtomicReference<>();
-        AtomicReference<Integer> productId = new AtomicReference<>();
 
-        TransactionTemplate transactionTemplate =
-                new TransactionTemplate(transactionManager);
+        executeInTransaction(() -> {
+            Product product = productRepository.save(createProduct(3));
 
-        transactionTemplate.executeWithoutResult(status -> {
-            Product product = productRepository.save(createProduct());
-            productId.set(product.getId());
-
-            StockSubscription subscription = new StockSubscription();
-            subscription.setProduct(product);
-            subscription.setEmail("repeat-test@mail.com");
-            subscription.setActive(true);
+            StockSubscription subscription = createSubscription(
+                    product,
+                    "stock-increase@mail.com",
+                    StockSubscriptionType.STOCK_INCREASE,
+                    3
+            );
 
             subscription = subscriptionRepository.save(subscription);
             subscriptionId.set(subscription.getId());
 
             eventPublisher.publishEvent(
-                    new ProductRestockedEvent(product.getId())
+                    new ProductRestockedEvent(
+                            product.getId(),
+                            3,
+                            5
+                    )
+            );
+        });
+
+        StockSubscription updatedSubscription =
+                findSubscription(subscriptionId.get());
+
+        assertFalse(updatedSubscription.isActive());
+        assertNotNull(updatedSubscription.getNotifiedAt());
+    }
+
+    @Test
+    void shouldNotNotifyStockIncreaseSubscriptionWhenNewStockDoesNotExceedSubscribedQuantity() {
+        AtomicReference<Long> subscriptionId = new AtomicReference<>();
+
+        executeInTransaction(() -> {
+            Product product = productRepository.save(createProduct(3));
+
+            StockSubscription subscription = createSubscription(
+                    product,
+                    "no-increase@mail.com",
+                    StockSubscriptionType.STOCK_INCREASE,
+                    5
+            );
+
+            subscription = subscriptionRepository.save(subscription);
+            subscriptionId.set(subscription.getId());
+
+            eventPublisher.publishEvent(
+                    new ProductRestockedEvent(
+                            product.getId(),
+                            3,
+                            5
+                    )
+            );
+        });
+
+        StockSubscription updatedSubscription =
+                findSubscription(subscriptionId.get());
+
+        assertTrue(
+                updatedSubscription.isActive(),
+                "Subscription should remain active when stock has not exceeded the subscribed quantity"
+        );
+
+        assertNull(updatedSubscription.getNotifiedAt());
+    }
+
+    @Test
+    void shouldNotNotifyOutOfStockSubscriptionForOrdinaryStockIncrease() {
+        AtomicReference<Long> subscriptionId = new AtomicReference<>();
+
+        executeInTransaction(() -> {
+            Product product = productRepository.save(createProduct(3));
+
+            StockSubscription subscription = createSubscription(
+                    product,
+                    "wrong-type@mail.com",
+                    StockSubscriptionType.OUT_OF_STOCK,
+                    null
+            );
+
+            subscription = subscriptionRepository.save(subscription);
+            subscriptionId.set(subscription.getId());
+
+            eventPublisher.publishEvent(
+                    new ProductRestockedEvent(
+                            product.getId(),
+                            3,
+                            5
+                    )
+            );
+        });
+
+        StockSubscription updatedSubscription =
+                findSubscription(subscriptionId.get());
+
+        assertTrue(updatedSubscription.isActive());
+        assertNull(updatedSubscription.getNotifiedAt());
+    }
+
+    @Test
+    void shouldNotProcessSubscriptionAgainAfterItWasNotified() {
+        AtomicReference<Long> subscriptionId = new AtomicReference<>();
+        AtomicReference<Integer> productId = new AtomicReference<>();
+
+        executeInTransaction(() -> {
+            Product product = productRepository.save(createProduct(0));
+            productId.set(product.getId());
+
+            StockSubscription subscription = createSubscription(
+                    product,
+                    "repeat-test@mail.com",
+                    StockSubscriptionType.OUT_OF_STOCK,
+                    null
+            );
+
+            subscription = subscriptionRepository.save(subscription);
+            subscriptionId.set(subscription.getId());
+
+            eventPublisher.publishEvent(
+                    new ProductRestockedEvent(
+                            product.getId(),
+                            0,
+                            5
+                    )
             );
         });
 
         StockSubscription afterFirstEvent =
-                subscriptionRepository.findById(subscriptionId.get())
-                        .orElseThrow();
+                findSubscription(subscriptionId.get());
 
         assertFalse(afterFirstEvent.isActive());
         assertNotNull(afterFirstEvent.getNotifiedAt());
 
-        var firstNotifiedAt = afterFirstEvent.getNotifiedAt();
+        LocalDateTime firstNotifiedAt =
+                afterFirstEvent.getNotifiedAt();
 
-        transactionTemplate.executeWithoutResult(status ->
+        executeInTransaction(() ->
                 eventPublisher.publishEvent(
-                        new ProductRestockedEvent(productId.get())
+                        new ProductRestockedEvent(
+                                productId.get(),
+                                0,
+                                10
+                        )
                 )
         );
 
         StockSubscription afterSecondEvent =
-                subscriptionRepository.findById(subscriptionId.get())
-                        .orElseThrow();
+                findSubscription(subscriptionId.get());
 
         assertFalse(afterSecondEvent.isActive());
 
@@ -127,12 +238,45 @@ class ProductRestockedEventIntegrationTest {
         );
     }
 
-    private Product createProduct() {
+    private void executeInTransaction(Runnable action) {
+        TransactionTemplate transactionTemplate =
+                new TransactionTemplate(transactionManager);
+
+        transactionTemplate.executeWithoutResult(status ->
+                action.run()
+        );
+    }
+
+    private StockSubscription findSubscription(Long id) {
+        return subscriptionRepository.findById(id)
+                .orElseThrow();
+    }
+
+    private StockSubscription createSubscription(
+            Product product,
+            String email,
+            StockSubscriptionType type,
+            Integer stockQuantityAtSubscription
+    ) {
+        StockSubscription subscription = new StockSubscription();
+        subscription.setProduct(product);
+        subscription.setEmail(email);
+        subscription.setType(type);
+        subscription.setStockQuantityAtSubscription(
+                stockQuantityAtSubscription
+        );
+        subscription.setActive(true);
+        subscription.setNotifiedAt(null);
+
+        return subscription;
+    }
+
+    private Product createProduct(int stockQuantity) {
         Product product = new Product();
         product.setArtist("Madonna");
         product.setName("Confessions on a Dance Floor");
         product.setPrice(new BigDecimal("25.00"));
-        product.setStockQuantity(0);
+        product.setStockQuantity(stockQuantity);
 
         return product;
     }

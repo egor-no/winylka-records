@@ -23,11 +23,11 @@
         </p>
 
         <div
-          v-if="product"
+          v-if="product && subscriptionType"
           class="app-notice-subscription"
         >
           <p class="app-notice-subscription-title">
-            Notify me when this item is back in stock
+            {{ subscriptionTitle }}
           </p>
 
           <div class="app-notice-form">
@@ -96,6 +96,16 @@ export default {
     product: {
       type: Object,
       default: null
+    }, 
+
+    subscriptionType: {
+      type: String,
+      default: null,
+      validator(value) {
+        return value === null
+          || value === 'OUT_OF_STOCK'
+          || value === 'STOCK_INCREASE'
+      }
     }
   },
 
@@ -121,9 +131,31 @@ export default {
     }
   },
 
+  computed: {
+    subscriptionTitle() {
+      if (this.subscriptionType === 'STOCK_INCREASE') {
+        return 'Notify me when more copies are added'
+      }
+
+      return 'Notify me when this item is back in stock'
+    },
+
+    subscriptionButtonText() {
+      if (this.subscriptionType === 'STOCK_INCREASE') {
+        return 'Notify me'
+      }
+
+      return 'Notify me'
+    }
+  },
+
   methods: {
-    async subscribe() {
-      if (!this.product || this.loading) {
+   async subscribe() {
+      if (
+        !this.product
+        || !this.subscriptionType
+        || this.loading
+      ) {
         return
       }
 
@@ -141,7 +173,8 @@ export default {
       try {
         const { data } = await stockSubscriptionsApi.subscribe(
           this.product.id,
-          email
+          email,
+          this.subscriptionType
         )
 
         this.resultMessage = data.message

@@ -155,6 +155,11 @@ export default {
       const stock = this.stockOf(product)
 
       if (stock <= 0) {
+        this.$emit('subscribe-to-restock', {
+          product,
+          type: 'OUT_OF_STOCK'
+        })
+
         return
       }
 
@@ -167,6 +172,11 @@ export default {
         : 0
 
       if (amountInCart >= stock) {
+        this.$emit('subscribe-to-restock', {
+          product,
+          type: 'STOCK_INCREASE'
+        })
+
         return
       }
 
@@ -176,8 +186,11 @@ export default {
     deleteFromCart(product) {
       this.$emit('delete-from-cart', product);
     },
-    subscribeToRestock(product) {
-      this.$emit('subscribe-to-restock', product)
+    subscribeToRestock(subscription) {
+      this.$emit(
+        'subscribe-to-restock',
+        subscription
+      )
     },
     setMax(value) {
       this.max = value;

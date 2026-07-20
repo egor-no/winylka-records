@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
         name = "stock_subscriptions",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_stock_subscription_product_email",
-                        columnNames = {"product_id", "email"}
+                        name = "uk_stock_subscription_product_email_type",
+                        columnNames = {"product_id", "email", "type"}
                 )
         }
 )
@@ -38,6 +38,13 @@ public class StockSubscription {
 
     @Column(nullable = false)
     private boolean active;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StockSubscriptionType type;
+
+    @Column(name = "stock_quantity_at_subscription")
+    private Integer stockQuantityAtSubscription;
 
     public StockSubscription() {
     }
@@ -99,5 +106,25 @@ public class StockSubscription {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public StockSubscriptionType getType() {
+        return type;
+    }
+
+    public void setType(StockSubscriptionType type) {
+        this.type = type;
+    }
+
+    public Integer getStockQuantityAtSubscription() {
+        return stockQuantityAtSubscription;
+    }
+
+    public void setStockQuantityAtSubscription(Integer stockQuantityAtSubscription) {
+        this.stockQuantityAtSubscription = stockQuantityAtSubscription;
     }
 }

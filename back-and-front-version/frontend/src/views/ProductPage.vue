@@ -60,52 +60,77 @@
         </p>
 
         <template v-if="availableStock > 0">
-          <div class="product-qty-row">
-            <label class="product-label">
-              Quantity
+          <template v-if="maxAddableAmount > 0">
+            <div class="product-qty-row">
+              <label class="product-label">
+                Quantity
 
-              <input
-                v-model.number="qty"
-                type="number"
-                min="1"
-                :max="maxAddableAmount"
-                class="product-qty-input"
+                <input
+                  v-model.number="qty"
+                  type="number"
+                  min="1"
+                  :max="maxAddableAmount"
+                  class="product-qty-input"
+                >
+              </label>
+
+              <span class="product-stock-hint">
+                Available: {{ availableStock }}
+              </span>
+
+              <span
+                v-if="inCartCount > 0"
+                class="product-in-cart-hint"
               >
-            </label>
+                In cart: {{ inCartCount }}
+              </span>
+            </div>
 
-            <span class="product-stock-hint">
-              Available: {{ availableStock }}
-            </span>
+            <div class="product-actions">
+              <button
+                type="button"
+                class="product-add-btn"
+                @click="addToCart"
+              >
+                Add to cart
+              </button>
 
-            <span
-              v-if="inCartCount > 0"
-              class="product-in-cart-hint"
-            >
-              In cart: {{ inCartCount }}
-            </span>
-          </div>
+              <RouterLink
+                to="/catalogue"
+                class="product-secondary-link"
+              >
+                Back to catalogue
+              </RouterLink>
+            </div>
+          </template>
 
-          <div class="product-actions">
-            <button
-              type="button"
-              class="product-add-btn"
-              :disabled="maxAddableAmount <= 0"
-              @click="addToCart"
-            >
-              {{
-                maxAddableAmount > 0
-                  ? 'Add to cart'
-                  : 'Maximum in cart'
-              }}
-            </button>
+          <template v-else>
+            <div class="product-stock-limit">
+              <p class="product-stock-limit-message">
+                All {{ availableStock }}
+                currently available
+                {{ availableStock === 1 ? 'copy is' : 'copies are' }}
+                already in your cart.
+              </p>
 
-            <RouterLink
-              to="/catalogue"
-              class="product-secondary-link"
-            >
-              Back to catalogue
-            </RouterLink>
-          </div>
+              <div class="product-actions">
+                <button
+                  type="button"
+                  class="product-notify-btn"
+                  @click="subscribeToStockIncrease"
+                >
+                  Notify me when more are added
+                </button>
+
+                <RouterLink
+                  to="/catalogue"
+                  class="product-secondary-link"
+                >
+                  Back to catalogue
+                </RouterLink>
+              </div>
+            </div>
+          </template>
         </template>
 
         <template v-else>
@@ -117,7 +142,7 @@
             <button
               type="button"
               class="product-notify-btn"
-              @click="$emit('subscribe-to-restock', product)"
+              @click="subscribeToOutOfStock"
             >
               Notify me
             </button>
@@ -246,6 +271,27 @@ export default {
     },
     deleteFromCart(product) {
       this.$emit('delete-from-cart', product)
+    }, 
+    subscribeToOutOfStock() {
+      if (!this.product) {
+        return
+      }
+
+      this.$emit('subscribe-to-restock', {
+        product: this.product,
+        type: 'OUT_OF_STOCK'
+      })
+    },
+
+    subscribeToStockIncrease() {
+      if (!this.product) {
+        return
+      }
+
+      this.$emit('subscribe-to-restock', {
+        product: this.product,
+        type: 'STOCK_INCREASE'
+      })
     }
   }
 }
