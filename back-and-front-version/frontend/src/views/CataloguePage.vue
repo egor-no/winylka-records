@@ -119,28 +119,25 @@ export default {
       search: ''
     }
   },
-created() {
-  const saved = sessionStorage.getItem(STORAGE_KEY)
 
-  if (saved) {
-    try {
-      this.items = JSON.parse(saved)
-      return
-    } catch (e) {
-      console.warn('Failed to parse cached products, refetching...', e)
-    }
-  }
-
-  http.get('/products')
-    .then(({ data }) => {
-      const shuffled = this.shuffleArray(data)
-      this.items = shuffled
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(shuffled))
-    })
-    .catch(err => {
-      console.error(err)
-    })
+  created() {
+    this.loadProducts()
   },
+
+  mounted() {
+    window.addEventListener(
+      'winylka-products-updated',
+      this.handleProductsUpdated
+    )
+  },
+
+  beforeUnmount() {
+    window.removeEventListener(
+      'winylka-products-updated',
+      this.handleProductsUpdated
+    )
+  },
+
   methods: {
     currency(value) {
       return formatCurrency(value);
@@ -163,6 +160,45 @@ created() {
         arr[j] = tmp
       }
       return arr
+    }, 
+    async loadProducts(forceReload = false) {
+      if (!forceReload) {
+        const saved = sessionStorage.getItem(STORAGE_KEY)
+
+        if (saved) {
+          try {
+            this.items = JSON.parse(saved)
+            return
+          } catch (e) {
+            console.warn(
+              'Failed to parse cached products, refetching...',
+              e
+            )
+
+            sessionStorage.removeItem(STORAGE_KEY)
+          }
+        }
+      }
+
+      try {
+        const { data } = await http.get('/products')
+
+        const shuffled = this.shuffleArray(data)
+
+        this.items = shuffled
+
+        sessionStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(shuffled)
+        )
+      } catch (err) {
+        console.error(err)
+      }
+    },
+
+    handleProductsUpdated() {
+      sessionStorage.removeItem(STORAGE_KEY)
+      this.loadProducts(true)
     }
   },
   computed: {
@@ -170,7 +206,7 @@ created() {
       const q = this.search.trim().toLowerCase();
 
       return this.items.filter(item => {
-        const matchesPrice = item.price < this.max;
+        const matchesPrice = Number(item.price) <= this.max
 
         if (!q) {
           return matchesPrice;

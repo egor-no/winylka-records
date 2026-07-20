@@ -6,6 +6,7 @@ import AboutPage from '../views/AboutPage.vue'
 import Product from '../views/ProductPage.vue'
 import NotFound from '../views/NotFoundPage.vue'
 import CheckoutSuccess from '../views/CheckoutSuccessPage.vue'
+import AdminProductsPage from '../views/AdminProductsPage.vue'
 
 const routes = [
   {
@@ -42,6 +43,11 @@ const routes = [
     path: '/about',
     name: 'about',
     component: AboutPage
+  },
+  {
+    path: '/admin',
+    name: 'admin-products',
+    component: AdminProductsPage
   },
   {
     path: '/404',
