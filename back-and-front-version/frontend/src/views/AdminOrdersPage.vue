@@ -376,30 +376,6 @@ export default {
   font-weight: bold;
 }
 
-.order-status-badge {
-  min-width: 76px;
-  padding: 3px 8px;
-  color: #fff8e7;
-  background: #6f6757;
-  border: 1px solid #3c2a1a;
-  font-family: "Courier New", monospace;
-  font-size: 10px;
-  font-weight: bold;
-  text-align: center;
-}
-
-.order-status-badge.status-new {
-  color: #142f22;
-  background: #e5ca53;
-  border-color: #806b15;
-}
-
-.order-status-badge.status-shipped {
-  color: #fff8e7;
-  background: #28543d;
-  border-color: #142f22;
-}
-
 .order-card-body {
   display: flex;
   align-items: center;
@@ -440,10 +416,6 @@ export default {
   overflow-wrap: anywhere;
 }
 
-.tracking-number {
-  font-family: "Courier New", monospace;
-}
-
 .order-open-btn {
   flex: 0 0 auto;
   min-width: 72px;
@@ -463,55 +435,6 @@ export default {
   border-bottom-color: #fff3d9;
 }
 
-.admin-toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
-}
-
-.admin-search-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
-.admin-search-input {
-  box-sizing: border-box;
-  min-width: 220px;
-  padding: 3px 8px;
-  border: 1px solid #cfa66f;
-  border-radius: 999px;
-  background: #fff8e7;
-  color: #3c2a1a;
-  font-family: inherit;
-  font-size: 12px;
-}
-
-.admin-search-input:focus {
-  outline: 1px solid #142f22;
-  outline-offset: 1px;
-}
-
-@media (max-width: 900px) {
-  .admin-toolbar {
-    flex-wrap: wrap;
-  }
-
-  .admin-toolbar-right {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  .order-info-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 600px) {
   .admin-toolbar-right {
     align-items: stretch;
@@ -528,19 +451,6 @@ export default {
   }
 
   .admin-result-badge {
-    align-self: flex-end;
-  }
-
-  .order-card-body {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .order-info-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .order-open-btn {
     align-self: flex-end;
   }
 }

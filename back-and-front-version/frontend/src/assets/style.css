@@ -697,3 +697,71 @@ body {
   line-height: 1.5;
   color: #7a5a32;
 }
+
+/* Chrome / Edge */
+
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+::-webkit-scrollbar-track {
+  background: #d8c59d;
+  border-left: 1px solid #c9a873;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    90deg,
+    #e9d5ae 0%,
+    #d8c59d 45%,
+    #c5af82 100%
+  );
+
+  border-top: 2px solid #fff3d9;
+  border-left: 2px solid #fff3d9;
+  border-right: 2px solid #60492f;
+  border-bottom: 2px solid #60492f;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    90deg,
+    #f0dfbc 0%,
+    #e0c494 45%,
+    #ccb07c 100%
+  );
+}
+
+::-webkit-scrollbar-corner {
+  background: #d8c59d;
+}
+
+/* Firefox */
+
+html {
+  scrollbar-width: auto;
+  scrollbar-color: #c5af82 #d8c59d;
+}
+
+::-webkit-scrollbar-button {
+  display: block;
+  height: 16px;
+  background: #d8c59d;
+
+  border-top: 2px solid #fff3d9;
+  border-left: 2px solid #fff3d9;
+  border-right: 2px solid #60492f;
+  border-bottom: 2px solid #60492f;
+}
+
+::-webkit-scrollbar-button:hover {
+  background: #e0c494;
+}
+
+::-webkit-scrollbar-button:active {
+  border-top-color: #60492f;
+  border-left-color: #60492f;
+  border-right-color: #fff3d9;
+  border-bottom-color: #fff3d9;
+}

@@ -118,6 +118,8 @@ import { adminProductsApi } from '../api/adminProducts'
 export default {
   name: 'AdminProductsPage',
 
+  emits: ['notice', 'confirm'],
+
   components: {
     AdminProductCard,
     AdminProductForm,
@@ -273,7 +275,8 @@ export default {
       } catch (e) {
         console.error(e)
 
-        alert(
+        this.$emit(
+          'notice',
           e?.response?.data?.message ||
           'Failed to save product.'
         )
@@ -321,10 +324,11 @@ export default {
       } catch (e) {
         console.error(e)
 
-        alert(
-          e?.response?.data?.message ||
-          'Failed to update stock.'
-        )
+        this.$emit(
+            'notice',
+            e?.response?.data?.message ||
+            'Failed to update stock.'
+          )
 
         this.statusText = 'Stock update error'
       } finally {
@@ -345,16 +349,20 @@ export default {
       this.products.splice(index, 1, updatedProduct)
     },
 
-    async deleteProduct(product) {
-      const confirmed = window.confirm(
-        `Delete "${product.artist} — ${product.name}"?\n\n` +
-        'The product and its cover file will be deleted.'
-      )
+    deleteProduct(product) {
+      this.$emit('confirm', {
+        title: 'Delete product',
+        message:
+          `Delete "${product.artist} — ${product.name}"?\n\n` +
+          'The product and its cover file will be deleted.',
+        confirmText: 'Delete',
+        cancelText: 'Keep product',
+        danger: true,
+        action: () => this.performDeleteProduct(product)
+      })
+    },
 
-      if (!confirmed) {
-        return
-      }
-
+    async performDeleteProduct(product) {
       this.saving = true
 
       try {
@@ -371,7 +379,8 @@ export default {
       } catch (e) {
         console.error(e)
 
-        alert(
+        this.$emit(
+          'notice',
           e?.response?.data?.message ||
           'Failed to delete product.'
         )
@@ -391,51 +400,7 @@ export default {
   gap: 12px;
 }
 
-.admin-toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
-}
-
-.admin-search-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
-.admin-search-input {
-  box-sizing: border-box;
-  min-width: 240px;
-  padding: 3px 8px;
-  border: 1px solid #cfa66f;
-  border-radius: 999px;
-  background: #fff8e7;
-  color: #3c2a1a;
-  font-family: inherit;
-  font-size: 12px;
-}
-
-.admin-search-input:focus {
-  outline: 1px solid #142f22;
-  outline-offset: 1px;
-}
-
 @media (max-width: 700px) {
-  .admin-toolbar {
-    flex-wrap: wrap;
-  }
-
-  .admin-toolbar-right {
-    width: 100%;
-    margin-left: 0;
-    flex-wrap: wrap;
-  }
-
   .admin-search-label {
     flex: 1;
     min-width: 220px;

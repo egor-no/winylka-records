@@ -16,59 +16,125 @@
       </RouterLink>
     </nav>
 
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <component
+        :is="Component"
+        @notice="showNotice"
+        @confirm="showConfirm"
+      />
+    </RouterView>
+
+    <AppNotice
+      :visible="notice.visible"
+      :message="notice.message"
+      :product="null"
+      :subscription-type="null"
+      @close="closeNotice"
+    />
+
+    <AppConfirm
+      :visible="confirmation.visible"
+      :title="confirmation.title"
+      :message="confirmation.message"
+      :confirm-text="confirmation.confirmText"
+      :cancel-text="confirmation.cancelText"
+      :danger="confirmation.danger"
+      @confirm="confirmAction"
+      @cancel="closeConfirmation"
+    />
   </section>
 </template>
 
 <script>
+import AppNotice from '../components/AppNotice.vue'
+import AppConfirm from '../components/AppConfirm.vue'
+
 export default {
-  name: 'AdminLayout'
+  name: 'AdminLayout',
+
+  components: {
+    AppNotice,
+    AppConfirm
+  },
+
+  data() {
+    return {
+      notice: {
+        visible: false,
+        message: ''
+      },
+
+      confirmation: {
+        visible: false,
+        title: 'Winylka confirmation',
+        message: '',
+        confirmText: 'Confirm',
+        cancelText: 'Cancel',
+        danger: false,
+        action: null
+      }
+    }
+  },
+
+  methods: {
+    showNotice(message) {
+      this.notice = {
+        visible: true,
+        message
+      }
+    },
+
+    closeNotice() {
+      this.notice = {
+        visible: false,
+        message: ''
+      }
+    },
+
+    showConfirm(options) {
+      this.confirmation = {
+        visible: true,
+        title:
+          options?.title ||
+          'Winylka confirmation',
+        message:
+          options?.message || '',
+        confirmText:
+          options?.confirmText ||
+          'Confirm',
+        cancelText:
+          options?.cancelText ||
+          'Cancel',
+        danger:
+          Boolean(options?.danger),
+        action:
+          typeof options?.action === 'function'
+            ? options.action
+            : null
+      }
+    },
+
+    confirmAction() {
+      const action = this.confirmation.action
+
+      this.closeConfirmation()
+
+      if (action) {
+        action()
+      }
+    },
+
+    closeConfirmation() {
+      this.confirmation = {
+        visible: false,
+        title: 'Winylka confirmation',
+        message: '',
+        confirmText: 'Confirm',
+        cancelText: 'Cancel',
+        danger: false,
+        action: null
+      }
+    }
+  }
 }
 </script>
-
-<style scoped>
-.admin-layout {
-  width: 100%;
-}
-
-.admin-section-nav {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  margin: 10px 0 0;
-  padding: 0 8px;
-  border-bottom: 3px solid #60492f;
-}
-
-.admin-section-link {
-  min-width: 90px;
-  padding: 6px 14px 5px;
-  color: #3c2a1a;
-  background: #c5af82;
-  border-top: 2px solid #fff3d9;
-  border-left: 2px solid #fff3d9;
-  border-right: 2px solid #60492f;
-  text-align: center;
-  font-family: "Courier New", monospace;
-  font-size: 11px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  text-decoration: none;
-}
-
-.admin-section-link:hover {
-  background: #d8c59d;
-}
-
-.admin-section-link.router-link-active {
-  position: relative;
-  top: 3px;
-  padding-bottom: 8px;
-  color: #e0c494;
-  background: #142f22;
-  border-top-color: #3d6a51;
-  border-left-color: #3d6a51;
-  border-right-color: #0e2319;
-}
-</style>

@@ -111,3 +111,122 @@
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
+
+.admin-layout {
+  width: 100%;
+}
+
+.admin-section-nav {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  margin: 10px 0 0;
+  padding: 0 8px;
+  border-bottom: 3px solid #60492f;
+}
+
+.admin-section-link {
+  min-width: 90px;
+  padding: 6px 14px 5px;
+  color: #3c2a1a;
+  background: #c5af82;
+  border-top: 2px solid #fff3d9;
+  border-left: 2px solid #fff3d9;
+  border-right: 2px solid #60492f;
+  text-align: center;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+
+.admin-section-link:hover {
+  background: #d8c59d;
+}
+
+.admin-section-link.router-link-active {
+  position: relative;
+  top: 3px;
+  padding-bottom: 8px;
+  color: #e0c494;
+  background: #142f22;
+  border-top-color: #3d6a51;
+  border-left-color: #3d6a51;
+  border-right-color: #0e2319;
+}
+
+.admin-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.admin-search-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.admin-search-input {
+  box-sizing: border-box;
+  min-width: 220px;
+  padding: 3px 8px;
+  border: 1px solid #cfa66f;
+  border-radius: 999px;
+  background: #fff8e7;
+  color: #3c2a1a;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.admin-search-input:focus {
+  outline: 1px solid #142f22;
+  outline-offset: 1px;
+}
+
+.order-status-badge {
+  min-width: 76px;
+  padding: 3px 8px;
+  color: #fff8e7;
+  background: #6f6757;
+  border: 1px solid #3c2a1a;
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.order-status-badge.status-new {
+  color: #142f22;
+  background: #e5ca53;
+  border-color: #806b15;
+}
+
+.order-status-badge.status-shipped {
+  color: #fff8e7;
+  background: #28543d;
+  border-color: #142f22;
+}
+
+.tracking-number {
+  font-family: "Courier New", monospace;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .admin-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .admin-toolbar-right {
+    width: 100%;
+    margin-left: 0;
+  }
+}

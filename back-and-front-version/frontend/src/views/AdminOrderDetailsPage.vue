@@ -284,6 +284,8 @@ import { adminOrdersApi } from '../api/adminOrders'
 export default {
   name: 'AdminOrderDetailsPage',
 
+  emits: ['notice', 'confirm'],
+
   props: {
     id: {
       type: String,
@@ -355,7 +357,7 @@ export default {
       }
     },
 
-    async shipOrder() {
+    shipOrder() {
       if (
         !this.order ||
         this.order.status !== 'NEW'
@@ -370,15 +372,20 @@ export default {
         return
       }
 
-      const confirmed = window.confirm(
-        `Mark order #${this.id} as shipped?\n\n` +
-        `Tracking number: ${trackingNumber}`
-      )
+      this.$emit('confirm', {
+        title: 'Ship order',
+        message:
+          `Mark order #${this.id} as shipped?\n\n` +
+          `Tracking number: ${trackingNumber}`,
+        confirmText: 'Ship order',
+        cancelText: 'Cancel',
+        danger: false,
+        action: () =>
+          this.performShipOrder(trackingNumber)
+      })
+    },
 
-      if (!confirmed) {
-        return
-      }
-
+    async performShipOrder(trackingNumber) {
       this.saving = true
       this.statusText =
         `Shipping order #${this.id}...`
@@ -401,7 +408,8 @@ export default {
       } catch (e) {
         console.error(e)
 
-        alert(
+        this.$emit(
+          'notice',
           e?.response?.data?.message ||
           'Failed to ship order.'
         )
@@ -476,29 +484,8 @@ export default {
 </script>
 
 <style scoped>
-.order-status-badge {
-  min-width: 76px;
+.admin-toolbar .order-status-badge {
   margin-left: auto;
-  padding: 3px 8px;
-  color: #fff8e7;
-  background: #6f6757;
-  border: 1px solid #3c2a1a;
-  font-family: "Courier New", monospace;
-  font-size: 10px;
-  font-weight: bold;
-  text-align: center;
-}
-
-.order-status-badge.status-new {
-  color: #142f22;
-  background: #e5ca53;
-  border-color: #806b15;
-}
-
-.order-status-badge.status-shipped {
-  color: #fff8e7;
-  background: #28543d;
-  border-color: #142f22;
 }
 
 .order-details-grid {
@@ -549,11 +536,6 @@ export default {
   font-size: 10px;
   font-weight: bold;
   text-transform: uppercase;
-}
-
-.tracking-number {
-  font-family: "Courier New", monospace;
-  overflow-wrap: anywhere;
 }
 
 .order-comment-panel,
